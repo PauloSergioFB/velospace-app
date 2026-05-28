@@ -1,35 +1,23 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { useRouter } from "expo-router"
+import { useContext, useEffect } from "react"
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import TabBar from "@/components/TabBar"
+import { AuthContext } from "@/contexts/AuthContext"
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+const TabsLayout = () => {
+  const router = useRouter()
 
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
-  );
+  const { user, loading } = useContext(AuthContext)
+
+  useEffect(() => {
+    // router.replace("/sign-in")
+
+    if (!loading && !user) {
+      router.replace("/sign-in")
+    }
+  }, [loading, router, user])
+
+  return <TabBar />
 }
+
+export default TabsLayout
