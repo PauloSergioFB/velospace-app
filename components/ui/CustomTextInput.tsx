@@ -8,18 +8,20 @@ const CustomTextInput = ({
   error,
   onChangeText,
   keyboardType,
-  dataMask = (value: string) => value,
+  dataMask = (inputValue: string) => inputValue,
 }: CustomTextInputProps) => {
   return (
-    <View>
-      <Text>{label}</Text>
+    <View className="mb-4 gap-2">
+      <Text className="text-sm font-medium text-slate-700">{label}</Text>
       <TextInput
+        className="min-h-14 rounded-xl border border-slate-200 bg-slate-50 px-4 text-base text-slate-900"
         placeholder={placeholder}
+        placeholderTextColor="#94a3b8"
         value={value}
-        onChangeText={(value) => onChangeText(dataMask(value))}
+        onChangeText={(inputValue) => onChangeText(dataMask(inputValue))}
         keyboardType={keyboardType}
       />
-      {error && <Text>{error}</Text>}
+      {error ? <Text className="text-sm text-red-500">{error}</Text> : null}
     </View>
   )
 }

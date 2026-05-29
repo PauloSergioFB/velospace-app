@@ -1,4 +1,6 @@
-import { Text, TouchableOpacity, View } from "react-native"
+import React, { useState } from "react"
+import { SafeAreaView, Text, View } from "react-native"
+import ModalSelect, { Option } from "@/components/ui/ModalSelect"
 
 interface SignUpTypeProps {
   data: any
@@ -7,26 +9,43 @@ interface SignUpTypeProps {
 }
 
 const SignUpType = ({ data, setData, errors }: SignUpTypeProps) => {
+  const [openModal, setOpenModal] = useState(false)
+
+  const option: Option[] = [
+    { id: "SHIPPER", label: "Expedidor" },
+    { id: "LAUNCHER_PROVIDER", label: "Provedora de Lancamento" },
+    { id: "PAYLOAD_HANDLER", label: "Operador de Lancamento" },
+  ]
+
+  const optionSelected =
+    option.find((currentOption) => currentOption.id === data.signUpType) || null
+
+  function handleOptionSelected(selectedOption: Option) {
+    setData((prev: any) => ({
+      ...prev,
+      signUpType: selectedOption.id,
+    }))
+
+    setOpenModal(false)
+  }
+
   return (
-    <View>
-      <TouchableOpacity
-        onPress={(prev) => setData({ ...prev, signUpType: "SHIPPER" })}
-      >
-        <Text>Expedidor</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={(prev) =>
-          setData({ ...prev, signUpType: "LAUNCHER_PROVIDER" })
-        }
-      >
-        <Text>Provedora de Lançamento</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={(prev) => setData({ ...prev, signUpType: "PAYLOAD_HANDLER" })}
-      >
-        <Text>Operador de Lançamento</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView className="gap-4">
+
+      <ModalSelect
+        title="Tipo de cadastro"
+        visible={openModal}
+        value={optionSelected}
+        options={option}
+        openModal={() => setOpenModal(true)}
+        closeModal={() => setOpenModal(false)}
+        optionSelected={handleOptionSelected}
+      />
+
+      {errors?.signUpType ? (
+        <Text className="text-sm text-red-500">{errors.signUpType}</Text>
+      ) : null}
+    </SafeAreaView>
   )
 }
 
