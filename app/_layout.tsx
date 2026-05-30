@@ -7,6 +7,15 @@ const RootLayout = () => {
       <Stack screenOptions={{ headerShown: false }} />
     </AuthProvider>
   )
+<<<<<<< Updated upstream
 }
 
 export default RootLayout
+=======
+
+}
+
+export default RootLayout
+
+
+>>>>>>> Stashed changes
