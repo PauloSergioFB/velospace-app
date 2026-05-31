@@ -1,4 +1,5 @@
 import { useMultiStepForm } from "@/hooks/useMultiStepForm"
+import { isValidEmail } from "@/lib/auth"
 import { useState } from "react"
 import { Text, TouchableOpacity, View } from "react-native"
 import ContactData from "./steps/ContactData"
@@ -57,7 +58,27 @@ const SignUpForm = () => {
   }
 
   const handleSubmit = () => {
-    console.log(data)
+    const trimmedEmail = data.email.trim()
+
+    const nextErrors = {
+      ...dataErrors,
+      email: "",
+    }
+
+    if (!trimmedEmail) {
+      nextErrors.email = "O email é obrigatório"
+    } else if (!isValidEmail(trimmedEmail)) {
+      nextErrors.email = "Digite um email válido"
+    }
+
+    if (nextErrors.email) {
+      setDataErrors(nextErrors)
+      return
+    }
+
+    setData((prev) => ({ ...prev, email: trimmedEmail }))
+    setDataErrors(nextErrors)
+    console.log({ ...data, email: trimmedEmail })
   }
 
   const selectedSignUpTypeLabel = data.signUpType

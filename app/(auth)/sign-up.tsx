@@ -11,8 +11,8 @@ const SignUp = () => {
             Cadastro
           </Text>
         </View>
-
-        <SignUpForm />
+        
+        
       </View>
     </SafeAreaView>
   )

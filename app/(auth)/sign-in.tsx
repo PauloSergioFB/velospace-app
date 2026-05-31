@@ -1,3 +1,4 @@
+import SignInForm from "@/components/SignInForm"
 import { useRouter } from "expo-router"
 import { Text, TouchableOpacity } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -11,6 +12,9 @@ const SignIn = () => {
       <TouchableOpacity onPress={() => router.push("/sign-up")}>
         <Text>Ir para cadastro</Text>
       </TouchableOpacity>
+
+      <SignInForm />
+      
     </SafeAreaView>
   )
 }

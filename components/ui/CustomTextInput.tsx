@@ -1,6 +1,8 @@
 import { CustomTextInputProps } from "@/types"
 import { Text, TextInput, View } from "react-native"
 
+
+
 const CustomTextInput = ({
   label,
   placeholder,

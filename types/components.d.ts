@@ -4,7 +4,7 @@ export interface CustomTextInputProps {
   label: string
   placeholder: string
   value: string
-  error: string
+  error?: string
   onChangeText: (value) => void
   keyboardType?: KeyboardTypeOptions
   dataMask?: (value: string) => string
