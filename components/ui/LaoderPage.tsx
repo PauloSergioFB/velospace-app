@@ -3,7 +3,7 @@ import Loader from "./Loader"
 
 const LoadScreen = () => {
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-slate-100">
       <Loader />
     </SafeAreaView>
   )

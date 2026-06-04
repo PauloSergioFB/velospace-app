@@ -1,22 +1,76 @@
-import SignInForm from "@/components/SignInForm"
-import { useRouter } from "expo-router"
-import { Text, TouchableOpacity } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import SignInForm from "@/components/SignInForm";
+import { Image, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const SignIn = () => {
-  const router = useRouter()
-
   return (
-    <SafeAreaView>
-      <Text>SignIn</Text>
-      <TouchableOpacity onPress={() => router.push("/sign-up")}>
-        <Text>Ir para cadastro</Text>
-      </TouchableOpacity>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+      <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
 
-      <SignInForm />
-      
+        <View
+          style={{
+            height: "50%",
+            backgroundColor: "#118845",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            overflow: "hidden",
+          }}
+        >
+          <Image
+            source={require("../../assets/images/img_1.png")}
+            resizeMode="cover"
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+          />
+        </View>
+
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#FFFFFF",
+            borderTopLeftRadius: 38,
+            borderTopRightRadius: 38,
+            marginTop: -36,
+            paddingHorizontal: 24,
+            paddingTop: 32,
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 28,
+              fontWeight: "700",
+              color: "#118845",
+              marginBottom: 8,
+            }}
+          >
+            Velo
+            <Text style={{ color: "#F97316" }}>S</Text>
+            pace
+          </Text>
+
+          {/* <Text
+            style={{
+              fontSize: 13,
+              color: "#64748B",
+              textAlign: "center",
+              marginBottom: 24,
+              lineHeight: 18,
+              maxWidth: 280,
+            }}
+          >
+            Envie o seu satélite para o espaço e monitore sua plantação em tempo real!
+          </Text> */}
+
+          <View style={{ width: "100%" }}>
+            <SignInForm />
+          </View>
+        </View>
+      </View>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default SignIn
+export default SignIn;

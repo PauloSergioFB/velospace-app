@@ -1,5 +1,5 @@
 import CustomTextInput from "@/components/ui/CustomTextInput"
-import { Text, View } from "react-native"
+import { Text, View, ScrollView } from "react-native"
 import { SignUpData } from ".."
 
 interface PersonalDataProps {
@@ -9,7 +9,7 @@ interface PersonalDataProps {
 }
 
 const DEFAULT_PERSONAL_DATA_CONFIG = {
-  roleLabel: "Usuario",
+  roleLabel: "Usuário",
   showCompanyField: false,
   documentLabel: "CPF/CNPJ",
   documentPlaceholder: "Insira seu CPF/CNPJ",
@@ -26,13 +26,13 @@ const PERSONAL_DATA_CONFIG: Record<
     documentPlaceholder: "Insira seu CPF/CNPJ",
   },
   LAUNCHER_PROVIDER: {
-    roleLabel: "Provedora de Lancamento",
+    roleLabel: "Provedora de Lançamento",
     showCompanyField: false,
     documentLabel: "CNPJ",
     documentPlaceholder: "Insira seu CNPJ",
   },
   PAYLOAD_HANDLER: {
-    roleLabel: "Operador de Lancamento",
+    roleLabel: "Operador de Lançamento",
     showCompanyField: true,
     documentLabel: "CPF",
     documentPlaceholder: "Insira seu CPF",
@@ -44,18 +44,41 @@ const PersonalData = ({ data, setData, errors }: PersonalDataProps) => {
     PERSONAL_DATA_CONFIG[data.signUpType] ?? DEFAULT_PERSONAL_DATA_CONFIG
 
   return (
-    <View className="gap-2">
-      <View className="gap-1">
-        <Text className="text-2xl font-semibold text-slate-900">
+    <View style={{ width: "100%", gap: 12 }}>
+      <View
+        style={{
+          alignItems: "center",
+          gap: 6,
+          marginBottom: 4,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: "700",
+            color: "#0F172A",
+          }}
+        >
           Dados pessoais
         </Text>
 
+        <Text
+          style={{
+            maxWidth: 280,
+            textAlign: "center",
+            fontSize: 14,
+            lineHeight: 20,
+            color: "#64748B",
+          }}
+        >
+          Preencha as informações básicas do cadastro.
+        </Text>
       </View>
 
       {personalDataConfig.showCompanyField ? (
         <CustomTextInput
           label="Empresa"
-          placeholder="Empresa"
+          placeholder="Digite o nome da empresa"
           value={data.company ?? ""}
           error={errors.company}
           onChangeText={(value) =>

@@ -1,7 +1,7 @@
 import { useMultiStepForm } from "@/hooks/useMultiStepForm"
 import { isValidEmail } from "@/lib/auth"
 import { useState } from "react"
-import { Text, TouchableOpacity, View } from "react-native"
+import { ScrollView, Text, TouchableOpacity, View } from "react-native"
 import ContactData from "./steps/ContactData"
 import PersonalData from "./steps/PersonalData"
 import Security from "./steps/Security"
@@ -20,8 +20,8 @@ export interface SignUpData {
 
 const SIGN_UP_TYPE_LABELS: Record<string, string> = {
   SHIPPER: "Expedidor",
-  LAUNCHER_PROVIDER: "Provedora de Lancamento",
-  PAYLOAD_HANDLER: "Operador de Lancamento",
+  LAUNCHER_PROVIDER: "Provedora de Lançamento",
+  PAYLOAD_HANDLER: "Operador de Lançamento",
 }
 
 const SignUpForm = () => {
@@ -47,16 +47,6 @@ const SignUpForm = () => {
     confirmPassword: "",
   })
 
-  const validations = {
-    signUpType: [],
-    name: [],
-    document: [],
-    email: [],
-    phone: [],
-    password: [],
-    confirmPassword: [],
-  }
-
   const handleSubmit = () => {
     const trimmedEmail = data.email.trim()
 
@@ -78,6 +68,7 @@ const SignUpForm = () => {
 
     setData((prev) => ({ ...prev, email: trimmedEmail }))
     setDataErrors(nextErrors)
+
     console.log({ ...data, email: trimmedEmail })
   }
 
@@ -99,44 +90,110 @@ const SignUpForm = () => {
     ])
 
   return (
-    <View className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-      <View className="mb-6 gap-4">
+    <View style={{ width: "100%", flex: 1 }}>
+      <View
+        style={{
+          marginBottom: 18,
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "700",
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            color: "#059669",
+          }}
+        >
+          Etapa {currentStepIndex + 1} de {steps.length}
+        </Text>
 
-
-        <View className="gap-2">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-sm font-medium text-slate-500">
-              Etapa {currentStepIndex + 1} de {steps.length}
-            </Text>
-         
-          </View>
-        </View>
+        <Text
+          style={{
+            fontSize: 14,
+            color: "#475569",
+            textAlign: "center",
+          }}
+        >
+          {selectedSignUpTypeLabel}
+        </Text>
       </View>
 
-      {step}
+      <ScrollView
+        style={{ width: "100%", flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 16 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {step}
+      </ScrollView>
 
-      <View className="mt-8 flex-row items-center gap-3">
+      <View
+        style={{
+          marginTop: 26,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
         {!isFirstStep ? (
           <TouchableOpacity
+            activeOpacity={0.8}
             onPress={() => back()}
-            className="min-h-14 flex-1 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-4"
+            style={{
+              minHeight: 56,
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: "#E2E8F0",
+              backgroundColor: "#FFFFFF",
+              paddingHorizontal: 16,
+            }}
           >
-            <Text className="font-semibold text-slate-700">Voltar</Text>
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "600",
+                color: "#334155",
+              }}
+            >
+              Voltar
+            </Text>
           </TouchableOpacity>
         ) : null}
 
         <TouchableOpacity
+          activeOpacity={0.8}
           onPress={() => {
             if (isLastStep) {
               handleSubmit()
               return
             }
+
             next()
           }}
-          className="min-h-14 flex-1 items-center justify-center rounded-xl bg-red-500 px-4"
+          style={{
+            minHeight: 56,
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 999,
+            backgroundColor: "#059669",
+            paddingHorizontal: 16,
+          }}
         >
-          <Text className="font-semibold text-white">
-            {isLastStep ? "Finalizar" : "Avancar"}
+          <Text
+            style={{
+              fontSize: 15,
+              fontWeight: "600",
+              color: "#FFFFFF",
+            }}
+          >
+            {isLastStep ? "Finalizar" : "Avançar"}
           </Text>
         </TouchableOpacity>
       </View>

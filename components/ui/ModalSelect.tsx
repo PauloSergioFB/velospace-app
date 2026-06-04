@@ -35,16 +35,37 @@ export default function ModalSelect({
 }: ModalListProps) {
   return (
     <>
-      <View className="gap-2">
-        <Text className="text-sm font-medium text-slate-700">{title}</Text>
+      <View style={{ gap: 8 }}>
+        <Text
+          style={{
+            fontSize: 14,
+            fontWeight: "500",
+            color: "#334155",
+          }}
+        >
+          {title}
+        </Text>
 
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={openModal}
-          className="min-h-14 justify-center rounded-xl border border-slate-200 bg-slate-50 px-4"
+          style={{
+            minHeight: 56,
+            justifyContent: "center",
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: "#E2E8F0",
+            backgroundColor: "#F8FAFC",
+            paddingHorizontal: 16,
+          }}
         >
-          <Text className={value ? "text-base text-slate-900" : "text-base text-slate-400"}>
-            {value ? value.label : "Selecione uma opcao"}
+          <Text
+            style={{
+              fontSize: 16,
+              color: value ? "#0F172A" : "#94A3B8",
+            }}
+          >
+            {value ? value.label : "Selecione uma opção"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -55,22 +76,60 @@ export default function ModalSelect({
         animationType="fade"
         onRequestClose={closeModal}
       >
-        <Pressable className="flex-1 bg-slate-950/60" onPress={closeModal}>
-          <SafeAreaView className="flex-1 items-center justify-center px-6">
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(15, 23, 42, 0.6)",
+          }}
+          onPress={closeModal}
+        >
+          <SafeAreaView
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 24,
+            }}
+          >
             <Pressable
-              className="max-h-[70%] w-full rounded-[28px] border border-slate-200 bg-white p-6 shadow-xl"
+              style={{
+                maxHeight: "70%",
+                width: "100%",
+                borderRadius: 28,
+                borderWidth: 1,
+                borderColor: "#E2E8F0",
+                backgroundColor: "#FFFFFF",
+                padding: 24,
+
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 10,
+                },
+                shadowOpacity: 0.15,
+                shadowRadius: 20,
+                elevation: 8,
+              }}
               onPress={(event) => event.stopPropagation()}
             >
-              <Text className="mb-1 text-xs font-semibold uppercase tracking-[2px] text-red-500">
-                Selecao
-              </Text>
-              <Text className="mb-5 text-2xl font-bold text-slate-900">
+              
+
+              <Text
+                style={{
+                  marginBottom: 20,
+                  fontSize: 24,
+                  fontWeight: "700",
+                  color: "#0F172A",
+                }}
+              >
                 {title}
               </Text>
 
               <ScrollView
                 showsVerticalScrollIndicator={false}
-                contentContainerClassName="gap-3"
+                contentContainerStyle={{
+                  gap: 12,
+                }}
               >
                 {options.map((option) => {
                   const isSelected = value?.id === option.id
@@ -79,22 +138,25 @@ export default function ModalSelect({
                     <TouchableOpacity
                       key={String(option.id)}
                       activeOpacity={0.85}
-                      className={`rounded-2xl border px-4 py-4 ${
-                        isSelected
-                          ? "border-red-500 bg-red-50"
-                          : "border-slate-200 bg-white"
-                      }`}
+                      style={{
+                        borderRadius: 16,
+                        borderWidth: 1,
+                        borderColor: isSelected ? "#059669" : "#E2E8F0",
+                        backgroundColor: isSelected ? "#ECFDF5" : "#FFFFFF",
+                        paddingHorizontal: 16,
+                        paddingVertical: 16,
+                      }}
                       onPress={() => {
                         optionSelected(option)
                         closeModal()
                       }}
                     >
                       <Text
-                        className={
-                          isSelected
-                            ? "text-base font-semibold text-red-600"
-                            : "text-base text-slate-800"
-                        }
+                        style={{
+                          fontSize: 16,
+                          fontWeight: isSelected ? "700" : "400",
+                          color: isSelected ? "#047857" : "#1E293B",
+                        }}
                       >
                         {option.label}
                       </Text>
@@ -106,9 +168,25 @@ export default function ModalSelect({
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={closeModal}
-                className="mt-5 min-h-12 items-center justify-center rounded-xl bg-slate-900 px-4"
+                style={{
+                  marginTop: 20,
+                  minHeight: 48,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 999,
+                  backgroundColor: "#059669",
+                  paddingHorizontal: 16,
+                }}
               >
-                <Text className="font-medium text-white">Fechar</Text>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontWeight: "600",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  Fechar
+                </Text>
               </TouchableOpacity>
             </Pressable>
           </SafeAreaView>

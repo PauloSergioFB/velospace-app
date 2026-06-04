@@ -97,16 +97,10 @@ const Profile = () => {
         </View>
 
         <View className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-          <ModalSelect
-            title="Cargo"
-            visible={isRoleModalOpen}
-            value={SIGN_IN_OPTIONS.find((o) => o.id === role) ?? null}
-            options={SIGN_IN_OPTIONS as any}
-            openModal={() => setIsRoleModalOpen(true)}
-            closeModal={() => setIsRoleModalOpen(false)}
-            optionSelected={(opt: any) => setRole(String(opt.id))}
-          />
+     
           {roleError ? <Text className="text-sm text-red-500">{roleError}</Text> : null}
+
+          <Text>Cargo</Text>
 
           <CustomTextInput
             label="Nome"
