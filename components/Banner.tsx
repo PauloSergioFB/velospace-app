@@ -33,16 +33,7 @@ const Banner = ({
         elevation: 5,
       }}
     >
-      <Text
-        style={{
-          fontSize: 12,
-          fontWeight: "600",
-          color: "#D1FAE5",
-          marginBottom: 6,
-        }}
-      >
-        Olá, {userName}
-      </Text>
+
 
       <Text
         style={{
@@ -98,8 +89,8 @@ const Banner = ({
           position: "absolute",
           right: -10,
           bottom: 0,
-          width: 225,
-          height: 225,
+          width: 200,
+          height: 200,
         }}
       />
 

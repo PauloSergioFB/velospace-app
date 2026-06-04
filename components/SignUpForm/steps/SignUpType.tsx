@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { SafeAreaView, Text, View } from "react-native"
+import { SafeAreaView, Text } from "react-native"
 import ModalSelect, { Option } from "@/components/ui/ModalSelect"
 
 interface SignUpTypeProps {

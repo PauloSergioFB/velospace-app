@@ -1,5 +1,5 @@
 import CustomTextInput from "@/components/ui/CustomTextInput"
-import { Text, View, ScrollView } from "react-native"
+import { Text, View } from "react-native"
 import { SignUpData } from ".."
 
 interface PersonalDataProps {
@@ -9,10 +9,11 @@ interface PersonalDataProps {
 }
 
 const DEFAULT_PERSONAL_DATA_CONFIG = {
-  roleLabel: "Usuário",
   showCompanyField: false,
   documentLabel: "CPF/CNPJ",
   documentPlaceholder: "Insira seu CPF/CNPJ",
+  nameLabel: "Nome",
+  namePlaceholder: "Digite seu nome",
 }
 
 const PERSONAL_DATA_CONFIG: Record<
@@ -20,22 +21,25 @@ const PERSONAL_DATA_CONFIG: Record<
   typeof DEFAULT_PERSONAL_DATA_CONFIG
 > = {
   SHIPPER: {
-    roleLabel: "Expedidor",
     showCompanyField: false,
     documentLabel: "CPF/CNPJ",
     documentPlaceholder: "Insira seu CPF/CNPJ",
+    nameLabel: "Nome do Expedidor",
+    namePlaceholder: "Digite o nome do Expedidor",
   },
   LAUNCHER_PROVIDER: {
-    roleLabel: "Provedora de Lançamento",
     showCompanyField: false,
     documentLabel: "CNPJ",
     documentPlaceholder: "Insira seu CNPJ",
+    nameLabel: "Razao social",
+    namePlaceholder: "Digite a razao social",
   },
   PAYLOAD_HANDLER: {
-    roleLabel: "Operador de Lançamento",
     showCompanyField: true,
     documentLabel: "CPF",
     documentPlaceholder: "Insira seu CPF",
+    nameLabel: "Nome do Operador de Lancamento",
+    namePlaceholder: "Digite o nome do Operador de Lancamento",
   },
 }
 
@@ -71,7 +75,7 @@ const PersonalData = ({ data, setData, errors }: PersonalDataProps) => {
             color: "#64748B",
           }}
         >
-          Preencha as informações básicas do cadastro.
+          Preencha as informacoes basicas do cadastro.
         </Text>
       </View>
 
@@ -88,8 +92,8 @@ const PersonalData = ({ data, setData, errors }: PersonalDataProps) => {
       ) : null}
 
       <CustomTextInput
-        label={`Nome do ${personalDataConfig.roleLabel}`}
-        placeholder={`Digite o nome do ${personalDataConfig.roleLabel}`}
+        label={personalDataConfig.nameLabel}
+        placeholder={personalDataConfig.namePlaceholder}
         value={data.name}
         error={errors.name}
         onChangeText={(value) => setData((prev) => ({ ...prev, name: value }))}

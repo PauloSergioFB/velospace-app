@@ -1,13 +1,17 @@
+import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import { useContext, useEffect, useState } from "react"
-import { Text, View } from "react-native"
+import { ScrollView, Text, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 import CustomTextInput from "@/components/ui/CustomTextInput"
-import ModalSelect from "@/components/ui/ModalSelect"
-import PageButton from "@/components/ui/PageButton"
 import { AuthContext } from "@/contexts/AuthContext"
-import { SIGN_IN_OPTIONS } from "@/lib/auth"
+import {
+  validateEmail,
+  validateForm,
+  validateMinLength,
+  validateRequired,
+} from "@/utils/masks"
 
 const Profile = () => {
   const router = useRouter()
@@ -17,11 +21,11 @@ const Profile = () => {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+
   const [roleError, setRoleError] = useState("")
   const [nameError, setNameError] = useState("")
   const [emailError, setEmailError] = useState("")
   const [passwordError, setPasswordError] = useState("")
-  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -31,80 +35,253 @@ const Profile = () => {
     }
   }, [user])
 
-  const validateEmail = (value: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-  }
-
   function handleSave() {
-    let isValid = true
+    const [validatedData, newErrors] = validateForm(
+      { role, name, email, password },
+      {
+        role: [(value) => validateRequired(value, "O cargo é obrigatório")],
+        name: [(value) => validateRequired(value, "O nome é obrigatório")],
+        email: [
+          (value) => validateRequired(value, "O email é obrigatório"),
+          validateEmail,
+        ],
+        password: [
+          (value) => validateRequired(value, "A senha é obrigatória"),
+          validateMinLength(6, "A senha precisa ter ao menos 6 caracteres"),
+        ],
+      },
+    )
 
-    setRoleError("")
-    setNameError("")
-    setEmailError("")
-    setPasswordError("")
+    setRoleError(newErrors.role)
+    setNameError(newErrors.name)
+    setEmailError(newErrors.email)
+    setPasswordError(newErrors.password)
 
-    if (!role.trim()) {
-      setRoleError("O cargo é obrigatório")
-      isValid = false
-    }
-
-    if (!name.trim()) {
-      setNameError("O nome é obrigatório")
-      isValid = false
-    }
-
-    if (!email.trim()) {
-      setEmailError("O email é obrigatório")
-      isValid = false
-    } else if (!validateEmail(email)) {
-      setEmailError("Digite um email válido")
-      isValid = false
-    }
-
-    if (!password.trim()) {
-      setPasswordError("A senha é obrigatória")
-      isValid = false
-    } else if (password.length < 6) {
-      setPasswordError("A senha precisa ter ao menos 6 caracteres")
-      isValid = false
-    }
-
-    if (!isValid) {
-      return
-    }
+    if (Object.values(newErrors).some(Boolean)) return
 
     if (setUser) {
       setUser({
         id: user?.id ?? 1,
-        name,
-        email,
-        type: (role as unknown) as any,
+        name: validatedData.name,
+        email: validatedData.email,
+        type: validatedData.role as any,
       })
     }
 
-    console.log("Saved profile", { role, name, email })
+    setRole(validatedData.role)
+    setName(validatedData.name)
+    setEmail(validatedData.email)
+    setPassword(validatedData.password)
+
+    console.log("Saved profile", {
+      role: validatedData.role,
+      name: validatedData.name,
+      email: validatedData.email,
+    })
+
     router.back()
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-100">
-      <View className="flex-1 px-5 py-8">
-        <View className="mb-8 gap-2">
-          <Text className="text-4xl font-black tracking-tight text-slate-950">
-            Perfil do Usuário
-          </Text>
-          <Text className="text-slate-500">Atualize seus dados abaixo.</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: 100,
+        }}
+      >
+        <View
+          style={{
+            width: "100%",
+            backgroundColor: "#059669",
+            borderRadius: 24,
+            paddingHorizontal: 20,
+            paddingVertical: 24,
+            marginBottom: 24,
+            overflow: "hidden",
+          }}
+        >
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.back()}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.18)",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 18,
+            }}
+          >
+            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <View
+            style={{
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                width: 86,
+                height: 86,
+                borderRadius: 999,
+                backgroundColor: "#FFFFFF",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 14,
+              }}
+            >
+              <Ionicons name="person" size={42} color="#059669" />
+            </View>
+
+            <Text
+              style={{
+                fontSize: 26,
+                fontWeight: "800",
+                color: "#FFFFFF",
+                marginBottom: 4,
+              }}
+            >
+              Perfil do Usuário
+            </Text>
+
+            <Text
+              style={{
+                fontSize: 14,
+                color: "#D1FAE5",
+                textAlign: "center",
+              }}
+            >
+              Atualize seus dados e mantenha sua conta em dia.
+            </Text>
+          </View>
+
+          <View
+            style={{
+              position: "absolute",
+              right: -35,
+              top: -35,
+              width: 120,
+              height: 120,
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.10)",
+            }}
+          />
+
+          <View
+            style={{
+              position: "absolute",
+              left: -30,
+              bottom: -40,
+              width: 100,
+              height: 100,
+              borderRadius: 999,
+              backgroundColor: "rgba(255,255,255,0.08)",
+            }}
+          />
         </View>
 
-        <View className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-     
-          {roleError ? <Text className="text-sm text-red-500">{roleError}</Text> : null}
+        <View
+          style={{
+            width: "100%",
+            borderRadius: 24,
+            backgroundColor: "#FFFFFF",
+            paddingHorizontal: 20,
+            paddingVertical: 24,
+            borderWidth: 1,
+            borderColor: "#E2E8F0",
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 6,
+            },
+            shadowOpacity: 0.08,
+            shadowRadius: 14,
+            elevation: 4,
+          }}
+        >
+          <View
+            style={{
+              marginBottom: 20,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "800",
+                color: "#0F172A",
+                marginBottom: 6,
+              }}
+            >
+              Dados da conta
+            </Text>
 
-          <Text>Cargo</Text>
+            <Text
+              style={{
+                fontSize: 14,
+                lineHeight: 20,
+                color: "#64748B",
+              }}
+            >
+              Edite suas informações de acesso e identificação.
+            </Text>
+          </View>
+
+          <View style={{ marginBottom: 14 }}>
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: "500",
+                color: "#334155",
+                marginBottom: 8,
+              }}
+            >
+              Cargo
+            </Text>
+
+            <View
+              style={{
+                minHeight: 54,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: roleError ? "#F87171" : "#E2E8F0",
+                backgroundColor: "#F8FAFC",
+                paddingHorizontal: 16,
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  color: role ? "#0F172A" : "#94A3B8",
+                }}
+              >
+                {role || "Cargo do usuário"}
+              </Text>
+            </View>
+
+            {roleError ? (
+              <Text
+                style={{
+                  marginTop: 6,
+                  fontSize: 14,
+                  fontWeight: "500",
+                  color: "#EF4444",
+                }}
+              >
+                {roleError}
+              </Text>
+            ) : null}
+          </View>
 
           <CustomTextInput
             label="Nome"
-            placeholder="Nome"
+            placeholder="Digite seu nome"
             value={name}
             error={nameError}
             onChangeText={setName}
@@ -112,7 +289,7 @@ const Profile = () => {
 
           <CustomTextInput
             label="Email"
-            placeholder="Email"
+            placeholder="Digite seu email"
             value={email}
             error={emailError}
             onChangeText={setEmail}
@@ -121,17 +298,38 @@ const Profile = () => {
 
           <CustomTextInput
             label="Senha"
-            placeholder="Senha"
+            placeholder="Digite sua senha"
             value={password}
             error={passwordError}
             onChangeText={setPassword}
           />
 
-          <View className="mt-4">
-            <PageButton title="Salvar" onPress={handleSave} variant="primary" />
+          <View style={{ marginTop: 10 }}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleSave}
+              style={{
+                minHeight: 56,
+                borderRadius: 999,
+                backgroundColor: "#059669",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 20,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: "#FFFFFF",
+                }}
+              >
+                Salvar alterações
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }

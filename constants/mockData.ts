@@ -100,3 +100,101 @@ export const payloads: PayloadListItemResponse[] = [
     },
   },
 ]
+
+export type ApprovalRequestStatus = "PENDING" | "APPROVED" | "REJECTED"
+export type ApprovalRequestPriority = "Alta" | "Media" | "Baixa"
+
+export interface ApprovalRequest {
+  request_id: number
+  payload_id: number
+  name: string
+  company: string
+  requested_at: string
+  priority: ApprovalRequestPriority
+  status: ApprovalRequestStatus
+}
+
+export const approvalRequests: ApprovalRequest[] = [
+  {
+    request_id: 101,
+    payload_id: 1,
+    name: "ORION-A1",
+    company: "Orbital Labs",
+    requested_at: "03/06/2026",
+    priority: "Alta",
+    status: "PENDING",
+  },
+  {
+    request_id: 102,
+    payload_id: 2,
+    name: "NOVA-7",
+    company: "Nova Dynamics",
+    requested_at: "02/06/2026",
+    priority: "Media",
+    status: "PENDING",
+  },
+  {
+    request_id: 103,
+    payload_id: 5,
+    name: "HELIOS-3",
+    company: "Helios Space",
+    requested_at: "01/06/2026",
+    priority: "Baixa",
+    status: "APPROVED",
+  },
+  {
+    request_id: 104,
+    payload_id: 10,
+    name: "ION-SPARK",
+    company: "Ion Spark",
+    requested_at: "31/05/2026",
+    priority: "Alta",
+    status: "REJECTED",
+  },
+]
+
+export type EmployeeApprovalRequestStatus = "PENDING" | "APPROVED" | "REJECTED"
+
+export interface EmployeeApprovalRequest {
+  request_id: number
+  name: string
+  role: string
+  base: string
+  requested_at: string
+  status: EmployeeApprovalRequestStatus
+}
+
+export const employeeApprovalRequests: EmployeeApprovalRequest[] = [
+  {
+    request_id: 201,
+    name: "Camila Torres",
+    role: "Analista de Missao",
+    base: "Base Alcantara",
+    requested_at: "03/06/2026",
+    status: "PENDING",
+  },
+  {
+    request_id: 202,
+    name: "Rafael Lima",
+    role: "Especialista em Integracao",
+    base: "Base Barreira do Inferno",
+    requested_at: "02/06/2026",
+    status: "PENDING",
+  },
+  {
+    request_id: 203,
+    name: "Fernanda Souza",
+    role: "Coordenadora de Operacoes",
+    base: "Base Alcantara",
+    requested_at: "31/05/2026",
+    status: "APPROVED",
+  },
+  {
+    request_id: 204,
+    name: "Lucas Martins",
+    role: "Tecnico de Solo",
+    base: "Base Natal",
+    requested_at: "30/05/2026",
+    status: "REJECTED",
+  },
+]

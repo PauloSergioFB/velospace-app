@@ -1,4 +1,4 @@
-import { Text, View } from "react-native"
+import { Text, View, Image} from "react-native"
 
 interface HeaderProps {
   userName: string
@@ -10,13 +10,28 @@ const Header = ({ userName }: HeaderProps) => {
       style={{
         width: "100%",
         backgroundColor: "#078C4B",
-       
         paddingHorizontal: 18,
         paddingVertical: 20,
         marginBottom: 22,
         overflow: "hidden",
+        flexDirection: "row",
       }}
     >
+
+      <View style={{ flex:1,  alignItems: "center"}}>
+      <Image
+        source={require("../../assets/images/img_profile.png")}
+        resizeMode="cover"
+        style={{
+          borderRadius: 999,
+          width: 80,
+          height: 80,
+        }}
+      />
+</View>
+
+<View style={{ flex: 3}}>
+      
       <Text
         style={{
           fontSize: 13,
@@ -75,6 +90,7 @@ const Header = ({ userName }: HeaderProps) => {
           backgroundColor: "rgba(255,255,255,0.08)",
         }}
       />
+    </View>
     </View>
   )
 }

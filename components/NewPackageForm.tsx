@@ -1,10 +1,10 @@
-import { formatDecimal } from "@/utils/masks"
 import {
+  formatDecimal,
   validateForm,
   validateNumber,
   validatePositive,
   validateRequired,
-} from "@/utils/validations"
+} from "@/utils/masks"
 import { useState } from "react"
 import { Text, TouchableOpacity, View } from "react-native"
 import CustomTextInput from "./ui/CustomTextInput"

@@ -1,5 +1,5 @@
 import CustomTextInput from "@/components/ui/CustomTextInput"
-import { Text, View, ScrollView } from "react-native"
+import { Text, View } from "react-native"
 import { SignUpData } from ".."
 
 interface ContactDataProps {

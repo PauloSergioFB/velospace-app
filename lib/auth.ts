@@ -19,10 +19,7 @@ export const SIGN_IN_OPTIONS = [
   { id: "PAYLOAD_HANDLER", label: "Operador de Lancamento" },
 ] as const
 
-export const isValidEmail = (email: string) => {
-  const trimmed = email.trim()
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
-}
+export { isValidEmail } from "@/utils/masks"
 
 export const createUser = (email: string, type: UserType): User => ({
   id: 1,

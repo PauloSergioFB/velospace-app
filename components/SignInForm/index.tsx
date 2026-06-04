@@ -5,9 +5,10 @@ import { Text, TouchableOpacity, View } from "react-native"
 import CustomTextInput from "@/components/ui/CustomTextInput"
 import { AuthContext } from "@/contexts/AuthContext"
 import { useMultiStepForm } from "@/hooks/useMultiStepForm"
-import { createUser, isValidEmail, SIGN_IN_TYPE_LABELS, UserType } from "@/lib/auth"
-import SignInType from "./steps/SignInType"
+import { createUser, SIGN_IN_TYPE_LABELS, UserType } from "@/lib/auth"
+import { validateEmail, validateForm, validateRequired } from "@/utils/masks"
 import Loader from "../ui/Loader"
+import SignInType from "./steps/SignInType"
 
 interface SignInData {
   signInType: UserType | ""
@@ -33,57 +34,50 @@ const SignInForm = () => {
   })
 
   const validate = () => {
-    const nextErrors = {
-      signInType: "",
-      email: "",
-      password: "",
-    }
-
-    const trimmedEmail = data.email.trim()
-
-    if (!data.signInType.trim()) {
-      nextErrors.signInType = "O tipo de login é obrigatório"
-    }
-
-    if (!trimmedEmail) {
-      nextErrors.email = "O email é obrigatório"
-    } else if (!isValidEmail(trimmedEmail)) {
-      nextErrors.email = "Digite um email válido"
-    }
-
-    if (!data.password.trim()) {
-      nextErrors.password = "A senha é obrigatória"
-    }
+    const [validatedData, nextErrors] = validateForm(data, {
+      signInType: [
+        (value) => validateRequired(value, "O tipo de login é obrigatório"),
+      ],
+      email: [
+        (value) => validateRequired(value, "O email é obrigatório"),
+        validateEmail,
+      ],
+      password: [
+        (value) => validateRequired(value, "A senha é obrigatória"),
+      ],
+    })
 
     setErrors(nextErrors)
 
-    if (!nextErrors.email) {
-      setData((prev) => ({ ...prev, email: trimmedEmail }))
-    }
+    if (Object.values(nextErrors).some(Boolean)) return null
 
-    return !nextErrors.signInType && !nextErrors.email && !nextErrors.password
+    setData(validatedData)
+    return validatedData
   }
 
   const validateCurrentStep = () => {
     if (currentStepIndex !== 0) return true
 
-    if (data.signInType.trim()) {
-      setErrors((prev) => ({ ...prev, signInType: "" }))
-      return true
-    }
+    const [, nextErrors] = validateForm(
+      { signInType: data.signInType },
+      {
+        signInType: [
+          (value) => validateRequired(value, "O tipo de login é obrigatório"),
+        ],
+      },
+    )
 
-    setErrors((prev) => ({
-      ...prev,
-      signInType: "O tipo de login é obrigatório",
-    }))
+    setErrors((prev) => ({ ...prev, signInType: nextErrors.signInType }))
 
-    return false
+    return !nextErrors.signInType
   }
 
   const handleSubmit = () => {
-    if (!validate()) return
+    const validatedData = validate()
 
-    setUser(createUser(data.email, data.signInType as UserType))
+    if (!validatedData) return
+
+    setUser(createUser(validatedData.email, validatedData.signInType as UserType))
     router.replace("/(tabs)")
   }
 
@@ -108,16 +102,6 @@ const SignInForm = () => {
 
       <View key={2} style={{ width: "100%" }}>
         <View style={{ marginBottom: 8, alignItems: "center", gap: 8 }}>
-          {/* <Text
-            style={{
-              fontSize: 24,
-              fontWeight: "700",
-              color: "#0F172A",
-            }}
-          >
-            Login
-          </Text> */}
-
           <Text
             style={{
               maxWidth: 280,
@@ -183,8 +167,6 @@ const SignInForm = () => {
 
   return (
     <View style={{ width: "100%" }}>
-      
-
       <View
         style={{
           marginBottom: 20,
@@ -282,15 +264,9 @@ const SignInForm = () => {
             {isLastStep ? "Entrar" : "Avançar"}
           </Text>
         </TouchableOpacity>
-
-        
       </View>
 
-
-      {/*
-      REMOVER DA QUI E CRIAR TELA
-      */}
-      <View style={{ marginTop: 24, alignItems: "center", color: "#F97316" }}>
+      <View style={{ marginTop: 24, alignItems: "center" }}>
         <TouchableOpacity activeOpacity={0.8} onPress={loader}>
           <Text style={{ color: "#F97316", fontWeight: "600" }}>
             Criar conta

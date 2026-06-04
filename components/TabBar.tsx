@@ -48,7 +48,10 @@ const CustomButton = () => {
       <Tabs.Screen
         name="profile"
         options={{
-          href: null,
+          title: "Perfil",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
         }}
       />
 

@@ -1,19 +1,17 @@
-import { useLocalSearchParams, useRouter } from "expo-router"
-import { Text, TouchableOpacity } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import PackageDetailView from "@/components/PackageDetailView"
+import { usePackageDetail } from "@/hooks/usePackageDetail"
+import { useLocalSearchParams } from "expo-router"
 
 const PackageDetail = () => {
-  const router = useRouter()
-
   const { payloadId } = useLocalSearchParams<{ payloadId: string }>()
+  const { packageDetail, notFound, handleBack } = usePackageDetail(payloadId)
 
   return (
-    <SafeAreaView>
-      <TouchableOpacity onPress={() => router.back()}>
-        <Text>Voltar</Text>
-      </TouchableOpacity>
-      <Text>{payloadId}</Text>
-    </SafeAreaView>
+    <PackageDetailView
+      packageDetail={packageDetail}
+      notFound={notFound}
+      onBack={handleBack}
+    />
   )
 }
 

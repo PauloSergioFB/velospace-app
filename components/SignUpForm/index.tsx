@@ -1,7 +1,16 @@
 import { useMultiStepForm } from "@/hooks/useMultiStepForm"
-import { isValidEmail } from "@/lib/auth"
+import { createLaunchProvider } from "@/services/launchProviders"
+import { createOperator as createLaunchOperator } from "@/services/operators"
+import { createOperator as createShipper } from "@/services/shipper"
+import {
+  validateEmail,
+  validateForm,
+  validateMinLength,
+  validateRequired,
+} from "@/utils/masks"
+import { useRouter } from "expo-router"
 import { useState } from "react"
-import { ScrollView, Text, TouchableOpacity, View } from "react-native"
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native"
 import ContactData from "./steps/ContactData"
 import PersonalData from "./steps/PersonalData"
 import Security from "./steps/Security"
@@ -20,11 +29,18 @@ export interface SignUpData {
 
 const SIGN_UP_TYPE_LABELS: Record<string, string> = {
   SHIPPER: "Expedidor",
-  LAUNCHER_PROVIDER: "Provedora de Lançamento",
-  PAYLOAD_HANDLER: "Operador de Lançamento",
+  LAUNCHER_PROVIDER: "Provedora de Lancamento",
+  PAYLOAD_HANDLER: "Operador de Lancamento",
 }
 
+const DEFAULT_LAUNCH_PROVIDER_ID = 1
+
+const onlyDigits = (value: string) => value.replace(/\D/g, "")
+
 const SignUpForm = () => {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const [data, setData] = useState<SignUpData>({
     signUpType: "",
     company: undefined,
@@ -47,29 +63,109 @@ const SignUpForm = () => {
     confirmPassword: "",
   })
 
-  const handleSubmit = () => {
-    const trimmedEmail = data.email.trim()
+  const handleSubmit = async () => {
+    if (isSubmitting) return
+
+    const [validatedData, validatedErrors] = validateForm(data, {
+      signUpType: [
+        (value) => validateRequired(value, "O tipo de cadastro e obrigatorio"),
+      ],
+      name: [(value) => validateRequired(value, "O nome e obrigatorio")],
+      document: [
+        (value) => validateRequired(value, "O CPF/CNPJ e obrigatorio"),
+      ],
+      email: [
+        (value) => validateRequired(value, "O email e obrigatorio"),
+        validateEmail,
+      ],
+      phone: [(value) => validateRequired(value, "O telefone e obrigatorio")],
+      password: [
+        (value) => validateRequired(value, "A senha e obrigatoria"),
+        validateMinLength(6, "A senha precisa ter ao menos 6 caracteres"),
+      ],
+      confirmPassword: [
+        (value) => validateRequired(value, "Confirme sua senha"),
+      ],
+    })
 
     const nextErrors = {
       ...dataErrors,
-      email: "",
+      ...validatedErrors,
+    }
+    const normalizedDocument = onlyDigits(validatedData.document)
+    const normalizedPhone = onlyDigits(validatedData.phone)
+
+    if (
+      validatedData.password &&
+      validatedData.confirmPassword &&
+      validatedData.password !== validatedData.confirmPassword
+    ) {
+      nextErrors.confirmPassword = "As senhas nao coincidem"
     }
 
-    if (!trimmedEmail) {
-      nextErrors.email = "O email é obrigatório"
-    } else if (!isValidEmail(trimmedEmail)) {
-      nextErrors.email = "Digite um email válido"
+    if (validatedData.document && !normalizedDocument) {
+      nextErrors.document = "Informe um CPF/CNPJ valido"
     }
 
-    if (nextErrors.email) {
-      setDataErrors(nextErrors)
-      return
+    if (validatedData.phone && !normalizedPhone) {
+      nextErrors.phone = "Informe um telefone valido"
     }
 
-    setData((prev) => ({ ...prev, email: trimmedEmail }))
     setDataErrors(nextErrors)
 
-    console.log({ ...data, email: trimmedEmail })
+    if (Object.values(nextErrors).some(Boolean)) return
+
+    setData(validatedData)
+
+    try {
+      setIsSubmitting(true)
+
+      if (validatedData.signUpType === "SHIPPER") {
+        await createShipper({
+          type: "PF",
+          shipper_document: normalizedDocument,
+          name: validatedData.name,
+          email: validatedData.email,
+          phone: normalizedPhone,
+          password: validatedData.password,
+        })
+      } else if (validatedData.signUpType === "LAUNCHER_PROVIDER") {
+        await createLaunchProvider({
+          cnpj: normalizedDocument,
+          corporate_name: validatedData.name,
+          email: validatedData.email,
+          phone: normalizedPhone,
+          password: validatedData.password,
+        })
+      } else if (validatedData.signUpType === "PAYLOAD_HANDLER") {
+        await createLaunchOperator({
+          launch_provider_id: DEFAULT_LAUNCH_PROVIDER_ID,
+          cpf: normalizedDocument,
+          name: validatedData.name,
+          email: validatedData.email,
+          phone: normalizedPhone,
+          password: validatedData.password,
+        })
+      } else {
+        throw new Error("Tipo de cadastro invalido para esta integracao.")
+      }
+
+      Alert.alert("Cadastro realizado", "Seu cadastro foi enviado com sucesso.", [
+        {
+          text: "OK",
+          onPress: () => router.replace("/(auth)/sign-in"),
+        },
+      ])
+    } catch (error) {
+      Alert.alert(
+        "Erro ao cadastrar",
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel concluir o cadastro.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const selectedSignUpTypeLabel = data.signUpType
@@ -170,19 +266,20 @@ const SignUpForm = () => {
           activeOpacity={0.8}
           onPress={() => {
             if (isLastStep) {
-              handleSubmit()
+              void handleSubmit()
               return
             }
 
             next()
           }}
+          disabled={isSubmitting}
           style={{
             minHeight: 56,
             flex: 1,
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 999,
-            backgroundColor: "#059669",
+            backgroundColor: isSubmitting ? "#86C5A5" : "#059669",
             paddingHorizontal: 16,
           }}
         >
@@ -193,7 +290,11 @@ const SignUpForm = () => {
               color: "#FFFFFF",
             }}
           >
-            {isLastStep ? "Finalizar" : "Avançar"}
+            {isLastStep
+              ? isSubmitting
+                ? "Cadastrando..."
+                : "Finalizar"
+              : "Avancar"}
           </Text>
         </TouchableOpacity>
       </View>
