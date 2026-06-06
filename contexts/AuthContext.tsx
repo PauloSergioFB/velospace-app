@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import { ReactNode, createContext, useEffect, useState } from "react"
 
 import { getUser } from "@/lib/api"
-import { AuthContextType, User, UserType } from "@/types"
+import { AuthContextType, User } from "@/types"
 
 export const AuthContext = createContext({} as AuthContextType)
 
@@ -13,21 +13,23 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const token = "INVALID_SHIPPER_TOKEN" // await AsyncStorage.getItem("jwt_token")
+        const token = await AsyncStorage.getItem("jwt_token")
+        const storedUser = await AsyncStorage.getItem("auth_user")
 
         if (token) {
+          if (storedUser) {
+            setUser(JSON.parse(storedUser) as User)
+            return
+          }
+
           const data = await getUser(token)
 
           if (!data) throw new Error()
 
-          setUser({
-            id: data["user_id"],
-            name: data["name"],
-            email: data["email"],
-            type: data["type"] as unknown as UserType,
-          })
+          setUser(data)
         }
       } catch {
+        await AsyncStorage.removeItem("auth_user")
         await AsyncStorage.removeItem("jwt_token")
         setUser(null)
       } finally {

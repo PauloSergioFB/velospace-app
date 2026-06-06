@@ -37,6 +37,101 @@ const DEFAULT_LAUNCH_PROVIDER_ID = 1
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "")
 
+const getStepErrors = (currentStepIndex: number, data: SignUpData) => {
+  switch (currentStepIndex) {
+    case 0: {
+      const [, nextErrors] = validateForm(
+        { signUpType: data.signUpType },
+        {
+          signUpType: [
+            (value) => validateRequired(value, "O tipo de cadastro e obrigatorio"),
+          ],
+        },
+      )
+
+      return { signUpType: nextErrors.signUpType }
+    }
+    case 1: {
+      const [validatedData, nextErrors] = validateForm(
+        {
+          name: data.name,
+          document: data.document,
+        },
+        {
+          name: [(value) => validateRequired(value, "O nome e obrigatorio")],
+          document: [
+            (value) => validateRequired(value, "O CPF/CNPJ e obrigatorio"),
+          ],
+        },
+      )
+
+      const normalizedDocument = onlyDigits(validatedData.document)
+
+      return {
+        name: nextErrors.name,
+        document:
+          validatedData.document && !normalizedDocument
+            ? "Informe um CPF/CNPJ valido"
+            : nextErrors.document,
+      }
+    }
+    case 2: {
+      const [validatedData, nextErrors] = validateForm(
+        {
+          email: data.email,
+          phone: data.phone,
+        },
+        {
+          email: [
+            (value) => validateRequired(value, "O email e obrigatorio"),
+            validateEmail,
+          ],
+          phone: [(value) => validateRequired(value, "O telefone e obrigatorio")],
+        },
+      )
+
+      const normalizedPhone = onlyDigits(validatedData.phone)
+
+      return {
+        email: nextErrors.email,
+        phone:
+          validatedData.phone && !normalizedPhone
+            ? "Informe um telefone valido"
+            : nextErrors.phone,
+      }
+    }
+    case 3: {
+      const [validatedData, nextErrors] = validateForm(
+        {
+          password: data.password,
+          confirmPassword: data.confirmPassword,
+        },
+        {
+          password: [
+            (value) => validateRequired(value, "A senha e obrigatoria"),
+            validateMinLength(6, "A senha precisa ter ao menos 6 caracteres"),
+          ],
+          confirmPassword: [
+            (value) => validateRequired(value, "Confirme sua senha"),
+          ],
+        },
+      )
+
+      return {
+        password: nextErrors.password,
+        confirmPassword:
+          validatedData.password &&
+          validatedData.confirmPassword &&
+          validatedData.password !== validatedData.confirmPassword
+            ? "As senhas nao coincidem"
+            : nextErrors.confirmPassword,
+      }
+    }
+    default:
+      return {}
+  }
+}
+
 const SignUpForm = () => {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -262,13 +357,19 @@ const SignUpForm = () => {
           </TouchableOpacity>
         ) : null}
 
-        <TouchableOpacity
+      <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => {
             if (isLastStep) {
               void handleSubmit()
               return
             }
+
+            const currentStepErrors = getStepErrors(currentStepIndex, data)
+
+            setDataErrors((prev) => ({ ...prev, ...currentStepErrors }))
+
+            if (Object.values(currentStepErrors).some(Boolean)) return
 
             next()
           }}
@@ -294,7 +395,7 @@ const SignUpForm = () => {
               ? isSubmitting
                 ? "Cadastrando..."
                 : "Finalizar"
-              : "Avancar"}
+              : "Avançar"}
           </Text>
         </TouchableOpacity>
       </View>

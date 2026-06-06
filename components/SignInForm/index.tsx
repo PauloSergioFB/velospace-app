@@ -1,11 +1,13 @@
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useRouter } from "expo-router"
 import { useContext, useState } from "react"
-import { Text, TouchableOpacity, View } from "react-native"
+import { Alert, Text, TouchableOpacity, View } from "react-native"
 
 import CustomTextInput from "@/components/ui/CustomTextInput"
 import { AuthContext } from "@/contexts/AuthContext"
 import { useMultiStepForm } from "@/hooks/useMultiStepForm"
-import { createUser, SIGN_IN_TYPE_LABELS, UserType } from "@/lib/auth"
+import { login } from "@/lib/api"
+import { SIGN_IN_TYPE_LABELS, UserType } from "@/lib/auth"
 import { validateEmail, validateForm, validateRequired } from "@/utils/masks"
 import Loader from "../ui/Loader"
 import SignInType from "./steps/SignInType"
@@ -20,6 +22,7 @@ const SignInForm = () => {
   const router = useRouter()
   const { setUser } = useContext(AuthContext)
   const [isNavigatingToSignUp, setIsNavigatingToSignUp] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [data, setData] = useState<SignInData>({
     signInType: "",
@@ -36,14 +39,14 @@ const SignInForm = () => {
   const validate = () => {
     const [validatedData, nextErrors] = validateForm(data, {
       signInType: [
-        (value) => validateRequired(value, "O tipo de login é obrigatório"),
+        (value) => validateRequired(value, "O tipo de login e obrigatorio"),
       ],
       email: [
-        (value) => validateRequired(value, "O email é obrigatório"),
+        (value) => validateRequired(value, "O email e obrigatorio"),
         validateEmail,
       ],
       password: [
-        (value) => validateRequired(value, "A senha é obrigatória"),
+        (value) => validateRequired(value, "A senha e obrigatoria"),
       ],
     })
 
@@ -62,7 +65,7 @@ const SignInForm = () => {
       { signInType: data.signInType },
       {
         signInType: [
-          (value) => validateRequired(value, "O tipo de login é obrigatório"),
+          (value) => validateRequired(value, "O tipo de login e obrigatorio"),
         ],
       },
     )
@@ -72,13 +75,35 @@ const SignInForm = () => {
     return !nextErrors.signInType
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting) return
+
     const validatedData = validate()
 
     if (!validatedData) return
 
-    setUser(createUser(validatedData.email, validatedData.signInType as UserType))
-    router.replace("/(tabs)")
+    try {
+      setIsSubmitting(true)
+
+      const session = await login({
+        email: validatedData.email,
+        password: validatedData.password,
+        signInType: validatedData.signInType as UserType,
+      })
+
+      await AsyncStorage.setItem("jwt_token", session.token)
+      await AsyncStorage.setItem("auth_user", JSON.stringify(session.user))
+
+      setUser(session.user)
+      router.replace("/(tabs)")
+    } catch (error) {
+      Alert.alert(
+        "Erro ao entrar",
+        error instanceof Error ? error.message : "Nao foi possivel fazer login.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   async function loader() {
@@ -237,7 +262,7 @@ const SignInForm = () => {
           activeOpacity={0.8}
           onPress={() => {
             if (isLastStep) {
-              handleSubmit()
+              void handleSubmit()
               return
             }
 
@@ -245,13 +270,14 @@ const SignInForm = () => {
 
             next()
           }}
+          disabled={isSubmitting}
           style={{
             minHeight: 56,
             flex: 1,
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 999,
-            backgroundColor: "#059669",
+            backgroundColor: isSubmitting ? "#86C5A5" : "#059669",
             paddingHorizontal: 16,
           }}
         >
@@ -261,7 +287,7 @@ const SignInForm = () => {
               color: "#FFFFFF",
             }}
           >
-            {isLastStep ? "Entrar" : "Avançar"}
+            {isLastStep ? (isSubmitting ? "Entrando..." : "Entrar") : "Avancar"}
           </Text>
         </TouchableOpacity>
       </View>
