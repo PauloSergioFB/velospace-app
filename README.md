@@ -1,50 +1,434 @@
-# Welcome to your Expo app 👋
+# VeloSpace
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo mobile construído com Expo e React Native para gerenciar o ciclo de candidatura, validação e acompanhamento de CubeSats em oportunidades de lançamento espacial.
 
-## Get started
+## Sumário
 
-1. Install dependencies
+- [Visão Geral](#visão-geral)
+- [Objetivo do Projeto](#objetivo-do-projeto)
+- [Escopo Funcional](#escopo-funcional)
+- [Perfis de Usuário](#perfis-de-usuário)
+- [Fluxos Implementados](#fluxos-implementados)
+- [Stack Tecnológica](#stack-tecnológica)
+- [Arquitetura do Frontend](#arquitetura-do-frontend)
+- [Estrutura de Pastas](#estrutura-de-pastas)
+- [Integração com Backend](#integração-com-backend)
+- [Rotas do Aplicativo](#rotas-do-aplicativo)
+- [Gerenciamento de Sessão](#gerenciamento-de-sessão)
+- [Como Executar o Projeto](#como-executar-o-projeto)
+- [Scripts Disponíveis](#scripts-disponíveis)
+- [Regras de Negócio Relevantes](#regras-de-negócio-relevantes)
+- [Melhorias Futuras](#melhorias-futuras)
 
-   ```bash
-   npm install
-   ```
+## Visão Geral
 
-2. Start the app
+### O que é o VeloSpace?
 
-   ```bash
-   npx expo start
-   ```
+O VeloSpace é uma plataforma digital desenvolvida para conectar proprietários de CubeSats, como universidades, instituições de pesquisa e desenvolvedores independentes, a empresas fornecedoras de serviços de lançamento espacial.
 
-In the output, you'll find options to open the app in a
+O projeto surgiu da necessidade de reduzir a burocracia e a dificuldade encontradas por organizações que desejam colocar pequenos satélites em órbita, aproveitando oportunidades de lançamento frequentemente subutilizadas pelas empresas do setor aeroespacial.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+A proposta do VeloSpace é tornar o processo de candidatura, seleção, rastreabilidade e validação de CubeSats mais digital, transparente, seguro e eficiente.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Objetivo do Projeto
 
-## Get a fresh project
+O escopo do projeto contempla:
 
-When you're ready, run:
+- Publicação de oportunidades de lançamento por fornecedores.
+- Cadastro de CubeSats pelos usuários.
+- Processo de candidatura dos satélites às oportunidades disponíveis.
+- Realização de sorteios para definição dos participantes selecionados.
+- Geração de QR Codes para rastreabilidade dos CubeSats sorteados.
+- Validação automatizada das dimensões dos satélites durante sua recepção na base de lançamento.
 
-```bash
-npm run reset-project
+Durante o cadastro, os proprietários informam as características técnicas e dimensões de seus CubeSats. Após o envio do satélite à empresa responsável pelo lançamento, a equipe da base realiza novas medições e registra os valores obtidos no sistema.
+
+Por meio da leitura do QR Code, o VeloSpace recupera os dados originalmente cadastrados e realiza uma comparação automática entre as informações declaradas e as medições efetuadas. Caso sejam identificadas divergências, o CubeSat é removido do processo de integração ao foguete. Caso contrário, ele é aprovado para prosseguir para as próximas etapas.
+
+Esse mecanismo aumenta a transparência, reduz a possibilidade de erros operacionais e contribui para a integridade do processo de validação.
+
+O sistema não contempla o transporte físico dos CubeSats, concentrando-se na gestão, rastreabilidade e validação das informações necessárias para garantir um processo mais transparente, seguro e eficiente.
+
+## Escopo Funcional
+
+O app atual cobre principalmente:
+
+- Autenticação por email e senha.
+- Cadastro de três tipos de conta.
+- Home com comportamento por perfil.
+- Cadastro de satélites pelo expedidor.
+- Aprovação inicial de satélites pelo operador de lançamento.
+- Registro de inspeção técnica do satélite.
+- Aprovação e rejeição de operadores pela provedora de lançamento.
+- Edição de perfil por tipo de usuário.
+- Rastreamento básico do ciclo do satélite.
+
+## Perfis de Usuário
+
+O sistema possui três perfis principais:
+
+### 1. `SHIPPER`
+
+Representa o proprietário do CubeSat.
+
+Responsabilidades:
+
+- Cadastrar satélites.
+- Escolher a provedora de lançamento.
+- Acompanhar status do satélite.
+- Adicionar código de rastreio quando aplicável.
+- Editar o próprio perfil.
+
+### 2. `PAYLOAD_HANDLER`
+
+Representa o operador de lançamento associado a uma provedora.
+
+Responsabilidades:
+
+- Avaliar satélites recebidos.
+- Aprovar ou rejeitar satélites.
+- Definir prioridade no momento da aprovação.
+- Registrar inspeções físicas.
+- Editar o próprio perfil.
+
+### 3. `LAUNCHER_PROVIDER`
+
+Representa a empresa provedora do lançamento.
+
+Responsabilidades:
+
+- Visualizar satélites vinculados à empresa.
+- Filtrar satélites por estado.
+- Visualizar satélites prontos para lançamento.
+- Aprovar ou rejeitar operadores da própria empresa.
+- Editar os dados cadastrais da empresa.
+
+## Fluxos Implementados
+
+### Autenticação
+
+- Login por email e senha.
+- Persistência de token em `AsyncStorage`.
+- Reconstrução do usuário autenticado a partir do JWT salvo.
+- Redirecionamento automático para a área autenticada quando houver sessão válida.
+
+### Cadastro
+
+O fluxo de cadastro é multi-etapas:
+
+1. Escolha do tipo de usuário.
+2. Dados pessoais ou corporativos.
+3. Dados de contato.
+4. Credenciais de acesso.
+
+Tipos suportados:
+
+- Expedidor
+- Provedora de Lançamento
+- Operador de Lançamento
+
+### Home do Expedidor
+
+- Lista satélites do usuário.
+- Filtros por pendente e enviado.
+- Botão para adicionar código de rastreio em status elegível.
+- Acesso ao detalhe do satélite.
+
+### Home do Operador de Lançamento
+
+- Lista satélites vinculados à provedora.
+- Filtros por pendente, prontos, aprovados, recusados e todos.
+- Aprovação com definição de prioridade.
+- Rejeição do satélite.
+- Acesso à tela de inspeção quando o satélite está aguardando inspeção.
+
+### Home da Provedora de Lançamento
+
+Possui duas visões:
+
+- `Satelites`
+- `Operadores`
+
+Na visão de satélites:
+
+- Lista satélites vinculados à empresa.
+- Filtros por status.
+- Filtro específico para satélites prontos para lançamento.
+- Ordenação por prioridade no filtro de prontos para lançamento.
+
+Na visão de operadores:
+
+- Lista operadores vinculados à empresa.
+- Filtros por pendente, aprovado, recusado e todos.
+- Aprovação ou rejeição de operadores pendentes.
+
+### Inspeção
+
+A tela de inspeção registra:
+
+- Altura medida
+- Largura medida
+- Comprimento medido
+- Peso medido
+
+Esses dados são enviados ao backend para comparação com as medidas declaradas no cadastro do satélite.
+
+### Perfil
+
+O app suporta edição de perfil para:
+
+- Expedidor
+- Operador de Lançamento
+- Provedora de Lançamento
+
+Também permite atualização de senha nos perfis que possuem endpoint correspondente.
+
+## Stack Tecnológica
+
+### Frontend
+
+- React 19
+- React Native 0.81
+- Expo 54
+- Expo Router 6
+- TypeScript
+- NativeWind
+
+### Bibliotecas principais
+
+- `expo-router` para roteamento baseado em arquivos
+- `@react-native-async-storage/async-storage` para persistência de sessão
+- `@expo/vector-icons` para ícones
+- `react-native-safe-area-context` para áreas seguras
+
+## Arquitetura do Frontend
+
+O app segue uma estrutura simples baseada em:
+
+- `app/` para rotas
+- `components/` para componentes reutilizáveis
+- `contexts/` para estado global de autenticação e perfis
+- `hooks/` para lógica de fluxo e composição de tela
+- `lib/` para client HTTP e integrações principais
+- `services/` para serviços especializados de cadastro
+- `types/` para contratos TypeScript
+
+### Contexts principais
+
+- `AuthContext`: sessão autenticada
+- `UserContext`: perfil do expedidor
+- `OperatorContext`: perfil do operador
+- `LaunchProviderContext`: perfil da provedora de lançamento
+
+## Estrutura de Pastas
+
+```text
+app/
+  (auth)/
+    sign-in.tsx
+    sign-up.tsx
+  (tabs)/
+    index.tsx
+    new-package.tsx
+    package-detail.tsx
+    inspection.tsx
+    profile.tsx
+  operator-access.tsx
+
+components/
+  SignInForm/
+  SignUpForm/
+  ui/
+  HomeContent.tsx
+  NewPackageForm.tsx
+  InspectionForm.tsx
+  PackageDetailView.tsx
+
+contexts/
+  AuthContext.tsx
+  UserContext.tsx
+  OperatorContext.tsx
+  LaunchProviderContext.tsx
+
+hooks/
+  useHome.ts
+  usePackageDetail.ts
+  useAuthStorage.ts
+  useMultiStepForm.ts
+
+lib/
+  api.ts
+  api-config.ts
+  auth.ts
+
+services/
+  shippers.ts
+  operators.ts
+  launchProviders.ts
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Integração com Backend
 
-## Learn more
+### Base URL
 
-To learn more about developing your project with Expo, look at the following resources:
+Configurada em:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- [`lib/api-config.ts`](./lib/api-config.ts)
 
-## Join the community
+Valor atual:
 
-Join our community of developers creating universal apps.
+```ts
+export const API_BASE_URL = "https://velospace-rm559914.azurewebsites.net"
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Estratégia de integração
+
+O app utiliza um client HTTP central em [`lib/api.ts`](./lib/api.ts), responsável por:
+
+- Montar URLs.
+- Injetar token JWT automaticamente.
+- Aplicar headers padrão.
+- Fazer fallback de método em endpoints que aceitam `POST`, `PUT` ou `PATCH`.
+- Buscar automaticamente todas as páginas em endpoints paginados.
+
+### Endpoints principais usados pelo app
+
+#### Autenticação
+
+- `POST /api/v1/auth`
+
+#### Perfis
+
+- `GET /api/v1/shippers/me`
+- `GET /api/v1/operators/me`
+- `GET /api/v1/launch-providers/me`
+- `GET /api/v1/operators/{id}`
+
+#### Cadastro
+
+- `POST /api/v1/shippers`
+- `POST /api/v1/operators`
+- `POST /api/v1/launch-providers`
+- `POST /api/v1/satellites`
+
+#### Listagens
+
+- `GET /api/v1/launch-providers`
+- `GET /api/v1/shippers/{id}/satellites`
+- `GET /api/v1/launch-providers/{id}/satellites`
+- `GET /api/v1/launch-providers/{id}/operators`
+- `GET /api/v1/satellite-priorities`
+
+#### Fluxos operacionais
+
+- `POST /api/v1/inspections`
+- `POST|PUT|PATCH /api/v1/satellites/{id}/approval`
+- `POST|PUT|PATCH /api/v1/operators/{id}/approval`
+- `POST|PUT|PATCH /api/v1/satellites/{id}/track`
+
+#### Atualização de perfil
+
+- `PUT|PATCH /api/v1/shippers/{id}`
+- `PUT|PATCH /api/v1/shippers/{id}/password`
+- `PUT|PATCH /api/v1/operators/{id}`
+- `PUT|PATCH /api/v1/launch-providers/{id}`
+- `PUT|PATCH /api/v1/launch-providers/{id}/password`
+
+## Rotas do Aplicativo
+
+### Públicas
+
+- `/(auth)/sign-in`
+- `/(auth)/sign-up`
+
+### Privadas
+
+- `/(tabs)`
+- `/(tabs)/profile`
+- `/(tabs)/package-detail`
+- `/(tabs)/inspection`
+- `/(tabs)/new-package`
+
+### Regras de acesso
+
+- `new-package` é restrita a `SHIPPER`.
+- `operator-access` é usada quando o operador existe, mas ainda não foi aprovado.
+- O layout autenticado decide redirecionamentos por papel e estado de aprovação.
+
+## Gerenciamento de Sessão
+
+O projeto usa `AsyncStorage` para persistir:
+
+- Token JWT
+- Usuário autenticado
+
+Chaves principais:
+
+- `jwt_token`
+- `auth_user`
+
+O carregamento inicial da sessão ocorre no `AuthContext`, que reconstrói o usuário a partir do token armazenado.
+
+## Como Executar o Projeto
+
+### Pré-requisitos
+
+- Node.js 18+
+- npm
+- Expo CLI via `npx`
+- Android Studio, emulador Android, Expo Go ou dispositivo físico
+
+### Instalação
+
+```bash
+npm install
+```
+
+### Execução
+
+```bash
+npm start
+```
+
+Atalhos comuns:
+
+```bash
+npm run android
+npm run ios
+npm run web
+```
+
+## Scripts Disponíveis
+
+```bash
+npm start
+npm run android
+npm run ios
+npm run web
+npm run lint
+```
+
+## Regras de Negócio Relevantes
+
+### Aprovação de satélite
+
+- O operador pode aprovar ou rejeitar um satélite pendente.
+- A aprovação exige seleção de prioridade.
+
+### Inspeção
+
+- Quando o satélite entra em `PENDING_INSPECTION`, o fluxo direciona para a tela de inspeção.
+- O registro compara dimensões declaradas e medidas reais no backend.
+
+### Prioridade de lançamento
+
+- Satélites `READY_FOR_LAUNCH` podem ser ordenados por prioridade.
+- A ordenação usa o endpoint de prioridades, não uma ordem fixa embutida no frontend.
+
+### Paginação
+
+- O client do app busca todas as páginas dos endpoints paginados já integrados.
+- Isso evita ocultar registros novos quando o backend não devolve tudo na página 0.
+
+
+
