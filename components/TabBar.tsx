@@ -7,6 +7,7 @@ import { AuthContext } from "@/contexts/AuthContext"
 const CustomButton = () => {
   const { user } = useContext(AuthContext)
   const isShipper = user?.type === "SHIPPER"
+  const isPayloadHandler = user?.type === "PAYLOAD_HANDLER"
 
   return (
     <Tabs
@@ -53,6 +54,17 @@ const CustomButton = () => {
       />
 
       <Tabs.Screen
+        name="rockets"
+        options={{
+          title: "Foguetes",
+          href: isPayloadHandler ? undefined : null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="planet-outline" size={size} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Perfil",
@@ -71,6 +83,13 @@ const CustomButton = () => {
 
       <Tabs.Screen
         name="inspection"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="rocket-detail"
         options={{
           href: null,
         }}

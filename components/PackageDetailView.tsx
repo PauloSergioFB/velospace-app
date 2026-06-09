@@ -24,6 +24,11 @@ const PackageDetailView = ({
   notFound,
   onBack,
 }: PackageDetailViewProps) => {
+  const statusDescription =
+    packageDetail?.status?.description ?? "Status nao informado"
+  const priorityDescription =
+    packageDetail?.priority?.description ?? "Prioridade nao informada"
+
   if (loading) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
@@ -198,7 +203,7 @@ const PackageDetailView = ({
             }}
           >
             <Text style={{ fontSize: 12, fontWeight: "700", color: "#FFFFFF" }}>
-              {packageDetail.status.description}
+              {statusDescription}
             </Text>
           </View>
 
@@ -262,7 +267,7 @@ const PackageDetailView = ({
                 Prioridade
               </Text>
               <Text style={{ fontSize: 15, fontWeight: "700", color: "#0F172A" }}>
-                {packageDetail.priority.description}
+                {priorityDescription}
               </Text>
             </View>
 
