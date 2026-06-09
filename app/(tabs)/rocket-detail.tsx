@@ -1,10 +1,11 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import CustomTextInput from "@/components/ui/CustomTextInput"
 import { AuthContext } from "@/contexts/AuthContext"
 import { createRocket, deleteRocket, getRocketById, updateRocket } from "@/lib/rocket-api"
 import { formatDecimal, validateForm, validateNumber, validatePositive, validateRequired } from "@/utils/masks"
 import { Ionicons } from "@expo/vector-icons"
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router"
-import { useEffect, useMemo, useState, useContext } from "react"
+import { useMemo, useState, useContext, useEffect } from "react"
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
@@ -28,48 +29,79 @@ const initialErrors = {
 
 const RocketDetail = () => {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { user, loading: authLoading } = useContext(AuthContext)
   const { rocketId } = useLocalSearchParams<{ rocketId?: string }>()
   const parsedRocketId = Number(rocketId)
   const isEditing = Number.isFinite(parsedRocketId) && parsedRocketId > 0
-  const [isLoading, setIsLoading] = useState(isEditing)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [data, setData] = useState(initialData)
   const [errors, setErrors] = useState(initialErrors)
 
-  useEffect(() => {
-    const loadRocket = async () => {
-      if (!isEditing) return
+  const rocketQuery = useQuery({
+    queryKey: ["rocket", parsedRocketId],
+    queryFn: () => getRocketById(parsedRocketId),
+    enabled: isEditing,
+  })
 
-      try {
-        setIsLoading(true)
-        const rocket = await getRocketById(parsedRocketId)
-        setData({
-          name: rocket.name,
-          capacityHeight: String(rocket.capacityHeight),
-          capacityWidth: String(rocket.capacityWidth),
-          capacityLength: String(rocket.capacityLength),
-          capacityWeight: String(rocket.capacityWeight),
-          rocketStatusId: String(rocket.rocketStatusId),
-        })
-      } catch (error) {
-        Alert.alert(
-          "Erro ao carregar foguete",
-          error instanceof Error ? error.message : "Nao foi possivel carregar o foguete.",
-          [
-            {
-              text: "OK",
-              onPress: () => router.back(),
-            },
-          ],
-        )
-      } finally {
-        setIsLoading(false)
+  const saveRocketMutation = useMutation({
+    mutationFn: async (payload: {
+      name: string
+      capacityHeight: number
+      capacityWidth: number
+      capacityLength: number
+      capacityWeight: number
+      rocketStatusId: number
+    }) => {
+      if (isEditing) {
+        return updateRocket(parsedRocketId, payload)
       }
-    }
 
-    void loadRocket()
-  }, [isEditing, parsedRocketId, router])
+      return createRocket(payload)
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["rockets"] })
+      if (isEditing) {
+        await queryClient.invalidateQueries({ queryKey: ["rocket", parsedRocketId] })
+      }
+    },
+  })
+
+  const deleteRocketMutation = useMutation({
+    mutationFn: deleteRocket,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["rockets"] })
+    },
+  })
+
+  useEffect(() => {
+    if (!rocketQuery.data) return
+
+    setData({
+      name: rocketQuery.data.name,
+      capacityHeight: String(rocketQuery.data.capacityHeight),
+      capacityWidth: String(rocketQuery.data.capacityWidth),
+      capacityLength: String(rocketQuery.data.capacityLength),
+      capacityWeight: String(rocketQuery.data.capacityWeight),
+      rocketStatusId: String(rocketQuery.data.rocketStatusId),
+    })
+  }, [rocketQuery.data])
+
+  useEffect(() => {
+    if (!rocketQuery.error) return
+
+    Alert.alert(
+      "Erro ao carregar foguete",
+      rocketQuery.error instanceof Error
+        ? rocketQuery.error.message
+        : "Nao foi possivel carregar o foguete.",
+      [
+        {
+          text: "OK",
+          onPress: () => router.back(),
+        },
+      ],
+    )
+  }, [rocketQuery.error, router])
 
   const validations = useMemo(
     () => ({
@@ -102,20 +134,14 @@ const RocketDetail = () => {
   }
 
   const handleSave = async () => {
-    if (isSubmitting) return
+    if (saveRocketMutation.isPending) return
 
     const payload = buildPayload()
 
     if (!payload) return
 
     try {
-      setIsSubmitting(true)
-
-      if (isEditing) {
-        await updateRocket(parsedRocketId, payload)
-      } else {
-        await createRocket(payload)
-      }
+      await saveRocketMutation.mutateAsync(payload)
 
       Alert.alert(
         isEditing ? "Foguete atualizado" : "Foguete cadastrado",
@@ -134,13 +160,11 @@ const RocketDetail = () => {
         "Erro ao salvar foguete",
         error instanceof Error ? error.message : "Nao foi possivel salvar o foguete.",
       )
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   const handleDelete = () => {
-    if (!isEditing || isSubmitting) return
+    if (!isEditing || deleteRocketMutation.isPending || saveRocketMutation.isPending) return
 
     Alert.alert("Excluir foguete", "Deseja excluir este foguete?", [
       {
@@ -152,8 +176,7 @@ const RocketDetail = () => {
         style: "destructive",
         onPress: async () => {
           try {
-            setIsSubmitting(true)
-            await deleteRocket(parsedRocketId)
+            await deleteRocketMutation.mutateAsync(parsedRocketId)
             Alert.alert("Foguete excluido", "O foguete foi removido com sucesso.", [
               {
                 text: "OK",
@@ -165,8 +188,6 @@ const RocketDetail = () => {
               "Erro ao excluir",
               error instanceof Error ? error.message : "Nao foi possivel excluir o foguete.",
             )
-          } finally {
-            setIsSubmitting(false)
           }
         },
       },
@@ -313,7 +334,7 @@ const RocketDetail = () => {
             keyboardType="number-pad"
           />
 
-          {isEditing && !isLoading ? (
+          {isEditing && !rocketQuery.isLoading ? (
             <Text
               style={{
                 fontSize: 12,
@@ -329,20 +350,23 @@ const RocketDetail = () => {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => void handleSave()}
-              disabled={isSubmitting || isLoading}
+              disabled={saveRocketMutation.isPending || rocketQuery.isLoading}
               style={{
                 minHeight: 56,
                 borderRadius: 999,
-                backgroundColor: isSubmitting || isLoading ? "#86C5A5" : "#059669",
+                backgroundColor:
+                  saveRocketMutation.isPending || rocketQuery.isLoading
+                    ? "#86C5A5"
+                    : "#059669",
                 alignItems: "center",
                 justifyContent: "center",
                 paddingHorizontal: 20,
               }}
             >
               <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>
-                {isLoading
+                {rocketQuery.isLoading
                   ? "Carregando..."
-                  : isSubmitting
+                  : saveRocketMutation.isPending
                     ? "Salvando..."
                     : isEditing
                       ? "Salvar alteracoes"
@@ -354,7 +378,11 @@ const RocketDetail = () => {
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={handleDelete}
-                disabled={isSubmitting || isLoading}
+                disabled={
+                  deleteRocketMutation.isPending ||
+                  saveRocketMutation.isPending ||
+                  rocketQuery.isLoading
+                }
                 style={{
                   minHeight: 56,
                   borderRadius: 999,
@@ -364,7 +392,12 @@ const RocketDetail = () => {
                   alignItems: "center",
                   justifyContent: "center",
                   paddingHorizontal: 20,
-                  opacity: isSubmitting || isLoading ? 0.65 : 1,
+                  opacity:
+                    deleteRocketMutation.isPending ||
+                    saveRocketMutation.isPending ||
+                    rocketQuery.isLoading
+                      ? 0.65
+                      : 1,
                 }}
               >
                 <Text style={{ fontSize: 16, fontWeight: "700", color: "#B91C1C" }}>

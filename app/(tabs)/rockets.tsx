@@ -1,61 +1,42 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import CustomTextInput from "@/components/ui/CustomTextInput"
 import { AuthContext } from "@/contexts/AuthContext"
 import { deleteRocket, getRockets, searchRockets } from "@/lib/rocket-api"
-import type { Rocket } from "@/types"
 import { Ionicons } from "@expo/vector-icons"
-import { Redirect, useFocusEffect, useRouter } from "expo-router"
-import { useCallback, useContext, useState } from "react"
+import { Redirect, useRouter } from "expo-router"
+import { useContext, useState } from "react"
 import { Alert, FlatList, Text, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 const Rockets = () => {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { user, loading } = useContext(AuthContext)
   const [searchTerm, setSearchTerm] = useState("")
-  const [rockets, setRockets] = useState<Rocket[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSearching, setIsSearching] = useState(false)
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("")
 
-  const loadRockets = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      const items = await getRockets()
-      setRockets(items)
-    } catch (error) {
-      Alert.alert(
-        "Erro ao carregar foguetes",
-        error instanceof Error ? error.message : "Nao foi possivel carregar os foguetes.",
-      )
-      setRockets([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const rocketsQuery = useQuery({
+    queryKey: ["rockets", appliedSearchTerm],
+    queryFn: () =>
+      appliedSearchTerm.trim()
+        ? searchRockets(appliedSearchTerm)
+        : getRockets(),
+  })
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadRockets()
-    }, [loadRockets]),
-  )
+  const deleteRocketMutation = useMutation({
+    mutationFn: deleteRocket,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["rockets"] })
+    },
+  })
 
-  const handleSearch = async () => {
-    try {
-      setIsSearching(true)
-      const items = await searchRockets(searchTerm)
-      setRockets(items)
-    } catch (error) {
-      Alert.alert(
-        "Erro na pesquisa",
-        error instanceof Error ? error.message : "Nao foi possivel pesquisar os foguetes.",
-      )
-    } finally {
-      setIsSearching(false)
-    }
+  const handleSearch = () => {
+    setAppliedSearchTerm(searchTerm.trim())
   }
 
-  const handleClearSearch = async () => {
+  const handleClearSearch = () => {
     setSearchTerm("")
-    await loadRockets()
+    setAppliedSearchTerm("")
   }
 
   const handleDeleteRocket = (rocketId: number) => {
@@ -69,8 +50,7 @@ const Rockets = () => {
         style: "destructive",
         onPress: async () => {
           try {
-            await deleteRocket(rocketId)
-            await loadRockets()
+            await deleteRocketMutation.mutateAsync(rocketId)
           } catch (error) {
             Alert.alert(
               "Erro ao apagar foguete",
@@ -133,19 +113,18 @@ const Rockets = () => {
         >
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={() => void handleSearch()}
-            disabled={isSearching}
+            onPress={handleSearch}
             style={{
               flex: 1,
               minHeight: 52,
               borderRadius: 999,
-              backgroundColor: isSearching ? "#86C5A5" : "#059669",
+              backgroundColor: rocketsQuery.isFetching ? "#86C5A5" : "#059669",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
             <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>
-              {isSearching ? "Pesquisando..." : "Pesquisar"}
+              {rocketsQuery.isFetching ? "Pesquisando..." : "Pesquisar"}
             </Text>
           </TouchableOpacity>
 
@@ -185,7 +164,7 @@ const Rockets = () => {
         </TouchableOpacity>
 
         <FlatList
-          data={rockets}
+          data={rocketsQuery.data ?? []}
           keyExtractor={(item) => String(item.rocketId)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 100, gap: 14 }}
@@ -207,7 +186,7 @@ const Rockets = () => {
                   marginBottom: 6,
                 }}
               >
-                {isLoading ? "Carregando foguetes" : "Nenhum foguete encontrado"}
+                {rocketsQuery.isLoading ? "Carregando foguetes" : "Nenhum foguete encontrado"}
               </Text>
 
               <Text
@@ -217,7 +196,7 @@ const Rockets = () => {
                   textAlign: "center",
                 }}
               >
-                {isLoading
+                {rocketsQuery.isLoading
                   ? "Buscando os foguetes cadastrados na base."
                   : "Ajuste a pesquisa ou cadastre um novo foguete."}
               </Text>
