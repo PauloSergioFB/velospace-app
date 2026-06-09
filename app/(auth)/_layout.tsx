@@ -1,20 +1,19 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { Slot, useRouter } from "expo-router"
-import { useEffect } from "react"
+import { AuthContext } from "@/contexts/AuthContext"
+import { Redirect, Slot } from "expo-router"
+import { useContext } from "react"
 
-const TabsLayout = () => {
-  const router = useRouter()
+const AuthLayout = () => {
+  const { user, loading } = useContext(AuthContext)
 
-  useEffect(() => {
-    const checkToken = async () => {
-      const token = await AsyncStorage.getItem("jwt_token")
-      if (token) router.push("/(tabs)")
-    }
+  if (loading) {
+    return null
+  }
 
-    checkToken()
-  }, [router])
+  if (user) {
+    return <Redirect href="/(tabs)" />
+  }
 
-  return <Slot /> // <Redirect href="/(tabs)" />
+  return <Slot />
 }
 
-export default TabsLayout
+export default AuthLayout

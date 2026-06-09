@@ -1,11 +1,27 @@
+import "../global.css"
+
+import { QueryClientProvider } from "@tanstack/react-query"
 import AuthProvider from "@/contexts/AuthContext"
-import { Stack } from "expo-router"
+import LaunchProviderProvider from "@/contexts/LaunchProviderContext"
+import OperatorProvider from "@/contexts/OperatorContext"
+import UserProvider from "@/contexts/UserContext"
+import "@/lib/nativewind"
+import { queryClient } from "@/lib/query-client"
+import { Slot } from "expo-router"
 
 const RootLayout = () => {
   return (
-    <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <UserProvider>
+          <OperatorProvider>
+            <LaunchProviderProvider>
+              <Slot />
+            </LaunchProviderProvider>
+          </OperatorProvider>
+        </UserProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   )
 }
 

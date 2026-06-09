@@ -1,12 +1,12 @@
 import { SafeAreaView } from "react-native-safe-area-context"
 import Loader from "./Loader"
 
-const LoadScreen = () => {
+const LoaderPage = () => {
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-slate-100">
       <Loader />
     </SafeAreaView>
   )
 }
 
-export default LoadScreen
+export default LoaderPage

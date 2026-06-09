@@ -1,21 +1,31 @@
-import { useRouter } from "expo-router"
-import { useContext, useEffect } from "react"
+import { Redirect } from "expo-router"
+import { useContext } from "react"
 
 import TabBar from "@/components/TabBar"
 import { AuthContext } from "@/contexts/AuthContext"
+import { OperatorContext } from "@/contexts/OperatorContext"
 
 const TabsLayout = () => {
-  const router = useRouter()
-
   const { user, loading } = useContext(AuthContext)
+  const { profile, loading: operatorLoading } = useContext(OperatorContext)
 
-  useEffect(() => {
-    // router.replace("/sign-in")
+  if (loading) {
+    return null
+  }
 
-    if (!loading && !user) {
-      router.replace("/sign-in")
+  if (!user) {
+    return <Redirect href="/(auth)/sign-in" />
+  }
+
+  if (user.type === "PAYLOAD_HANDLER") {
+    if (operatorLoading) {
+      return null
     }
-  }, [loading, router, user])
+
+    if (profile?.status.code !== "APPROVED") {
+      return <Redirect href="/operator-access" />
+    }
+  }
 
   return <TabBar />
 }
