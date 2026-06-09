@@ -1,3 +1,5 @@
+import type { PayloadListItemResponse, PayloadStatusCode } from "@/types"
+
 export const payloads: PayloadListItemResponse[] = [
   {
     payload_id: 1,

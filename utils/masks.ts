@@ -1,3 +1,5 @@
+import type { FormErrors, Validations } from "@/types"
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export const formatDecimal = (value: string) => {
@@ -14,12 +16,12 @@ const normalizeNumberValue = (value: string | number) => {
   return Number(normalizedValue)
 }
 
-export const validateForm = <T extends Record<string, any>>(
+export const validateForm = <T extends object>(
   data: T,
   validations: Validations<T>,
 ): [T, FormErrors<T>] => {
   const newErrors = {} as FormErrors<T>
-  const validatedData = { ...data }
+  const validatedData = { ...data } as T
 
   for (const field in validations) {
     const typedField = field as keyof T
@@ -42,7 +44,7 @@ export const validateForm = <T extends Record<string, any>>(
       }
     }
 
-    validatedData[typedField] = value
+    validatedData[typedField] = value as T[keyof T]
   }
 
   return [validatedData, newErrors]

@@ -1,4 +1,7 @@
+import ModalSelect, { type Option } from "@/components/ui/ModalSelect"
 import CustomTextInput from "@/components/ui/CustomTextInput"
+import { getLaunchProviders } from "@/lib/api"
+import { useEffect, useMemo, useState } from "react"
 import { Text, View } from "react-native"
 import { SignUpData } from ".."
 
@@ -44,8 +47,38 @@ const PERSONAL_DATA_CONFIG: Record<
 }
 
 const PersonalData = ({ data, setData, errors }: PersonalDataProps) => {
+  const [isCompanyModalVisible, setIsCompanyModalVisible] = useState(false)
+  const [companyOptions, setCompanyOptions] = useState<Option[]>([])
   const personalDataConfig =
     PERSONAL_DATA_CONFIG[data.signUpType] ?? DEFAULT_PERSONAL_DATA_CONFIG
+  const selectedCompany = useMemo<Option | null>(() => {
+    if (!data.launchProviderId || !data.company) return null
+
+    return {
+      id: data.launchProviderId,
+      label: data.company,
+    }
+  }, [data.company, data.launchProviderId])
+
+  useEffect(() => {
+    const loadLaunchProviders = async () => {
+      if (data.signUpType !== "PAYLOAD_HANDLER") return
+
+      try {
+        const response = await getLaunchProviders()
+        setCompanyOptions(
+          response.items.map((item) => ({
+            id: item.launch_provider_id,
+            label: item.corporate_name,
+          })),
+        )
+      } catch {
+        setCompanyOptions([])
+      }
+    }
+
+    void loadLaunchProviders()
+  }, [data.signUpType])
 
   return (
     <View style={{ width: "100%", gap: 12 }}>
@@ -80,15 +113,35 @@ const PersonalData = ({ data, setData, errors }: PersonalDataProps) => {
       </View>
 
       {personalDataConfig.showCompanyField ? (
-        <CustomTextInput
-          label="Empresa"
-          placeholder="Digite o nome da empresa"
-          value={data.company ?? ""}
-          error={errors.company}
-          onChangeText={(value) =>
-            setData((prev) => ({ ...prev, company: value }))
-          }
-        />
+        <View style={{ gap: 6 }}>
+          <ModalSelect
+            title="Empresa"
+            visible={isCompanyModalVisible}
+            value={selectedCompany}
+            options={companyOptions}
+            openModal={() => setIsCompanyModalVisible(true)}
+            closeModal={() => setIsCompanyModalVisible(false)}
+            optionSelected={(option) =>
+              setData((prev) => ({
+                ...prev,
+                company: option.label,
+                launchProviderId: Number(option.id),
+              }))
+            }
+          />
+
+          {errors.company ? (
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: "500",
+                color: "#EF4444",
+              }}
+            >
+              {errors.company}
+            </Text>
+          ) : null}
+        </View>
       ) : null}
 
       <CustomTextInput

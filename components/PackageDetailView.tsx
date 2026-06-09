@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 
 interface PackageDetailViewProps {
   packageDetail: PackageDetailViewModel | null
+  loading: boolean
   notFound: boolean
   onBack: () => void
 }
@@ -19,9 +20,22 @@ const infoCardStyle = {
 
 const PackageDetailView = ({
   packageDetail,
+  loading,
   notFound,
   onBack,
 }: PackageDetailViewProps) => {
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: "#0F172A" }}>
+            Carregando detalhes do satelite...
+          </Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
   if (notFound || !packageDetail) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
@@ -73,7 +87,7 @@ const PackageDetailView = ({
                 marginBottom: 8,
               }}
             >
-              Envio nao encontrado
+              Satelite nao encontrado
             </Text>
 
             <Text
@@ -84,7 +98,7 @@ const PackageDetailView = ({
                 textAlign: "center",
               }}
             >
-              O identificador informado nao corresponde a nenhum envio disponivel.
+              O identificador informado nao corresponde a nenhum satelite disponivel.
             </Text>
           </View>
         </View>
@@ -147,7 +161,7 @@ const PackageDetailView = ({
               marginBottom: 6,
             }}
           >
-            Envio #{packageDetail.payload_id}
+            Satelite #{packageDetail.satellite_id}
           </Text>
 
           <Text
@@ -170,7 +184,7 @@ const PackageDetailView = ({
               maxWidth: 280,
             }}
           >
-            {packageDetail.objective}
+            {packageDetail.launch_justification}
           </Text>
 
           <View
@@ -245,10 +259,10 @@ const PackageDetailView = ({
               }}
             >
               <Text style={{ fontSize: 12, color: "#64748B", marginBottom: 5 }}>
-                Empresa
+                Prioridade
               </Text>
               <Text style={{ fontSize: 15, fontWeight: "700", color: "#0F172A" }}>
-                {packageDetail.company}
+                {packageDetail.priority.description}
               </Text>
             </View>
 
@@ -279,10 +293,10 @@ const PackageDetailView = ({
               }}
             >
               <Text style={{ fontSize: 12, color: "#64748B", marginBottom: 5 }}>
-                Solicitado em
+                Expedidor
               </Text>
               <Text style={{ fontSize: 15, fontWeight: "700", color: "#0F172A" }}>
-                {packageDetail.requestedAt}
+                #{packageDetail.shipper_id}
               </Text>
             </View>
 
@@ -295,10 +309,10 @@ const PackageDetailView = ({
               }}
             >
               <Text style={{ fontSize: 12, color: "#64748B", marginBottom: 5 }}>
-                Previsao
+                Provedora
               </Text>
               <Text style={{ fontSize: 15, fontWeight: "700", color: "#0F172A" }}>
-                {packageDetail.expectedLaunch ?? "Sem previsao"}
+                #{packageDetail.launch_provider_id}
               </Text>
             </View>
           </View>
@@ -328,10 +342,10 @@ const PackageDetailView = ({
               }}
             >
               {[
-                `${packageDetail.dimensions.heightCm} cm alt.`,
-                `${packageDetail.dimensions.widthCm} cm larg.`,
-                `${packageDetail.dimensions.lengthCm} cm comp.`,
-                `${packageDetail.dimensions.weightKg} kg`,
+                `${packageDetail.height} cm alt.`,
+                `${packageDetail.width} cm larg.`,
+                `${packageDetail.length} cm comp.`,
+                `${packageDetail.weight} kg`,
               ].map((item) => (
                 <View
                   key={item}
@@ -431,17 +445,6 @@ const PackageDetailView = ({
                     {step.title}
                   </Text>
 
-                  {step.dateLabel && (
-                    <Text
-                      style={{
-                        fontSize: 12,
-                        fontWeight: "700",
-                        color: "#64748B",
-                      }}
-                    >
-                      {step.dateLabel}
-                    </Text>
-                  )}
                 </View>
 
                 <Text

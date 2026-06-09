@@ -1,13 +1,14 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { useRouter } from "expo-router"
 import { useContext, useState } from "react"
 import { Alert, Text, TouchableOpacity, View } from "react-native"
 
 import CustomTextInput from "@/components/ui/CustomTextInput"
 import { AuthContext } from "@/contexts/AuthContext"
+import { storeSession } from "@/hooks/useAuthStorage"
 import { useMultiStepForm } from "@/hooks/useMultiStepForm"
 import { login } from "@/lib/api"
-import { SIGN_IN_TYPE_LABELS, UserType } from "@/lib/auth"
+import { SIGN_IN_TYPE_LABELS } from "@/lib/auth"
+import type { UserType } from "@/types"
 import { validateEmail, validateForm, validateRequired } from "@/utils/masks"
 import Loader from "../ui/Loader"
 import SignInType from "./steps/SignInType"
@@ -91,9 +92,7 @@ const SignInForm = () => {
         signInType: validatedData.signInType as UserType,
       })
 
-      await AsyncStorage.setItem("jwt_token", session.token)
-      await AsyncStorage.setItem("auth_user", JSON.stringify(session.user))
-
+      await storeSession(session)
       setUser(session.user)
       router.replace("/(tabs)")
     } catch (error) {

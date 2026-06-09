@@ -1,6 +1,6 @@
-const API_BASE_URL = "https://velospace-rm559914.azurewebsites.net"
+import { apiFetch } from "@/lib/api"
 
-export interface CreateOperatorInput {
+export interface CreateShipperInput {
   type: string,
   shipper_document: string,
   name: string,
@@ -25,8 +25,8 @@ const extractErrorMessage = (payload: unknown) => {
   return null
 }
 
-export const createOperator = async (input: CreateOperatorInput) => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/shippers`, {
+export const createShipper = async (input: CreateShipperInput) => {
+  const response = await apiFetch("/api/v1/shippers", {
     method: "POST",
     headers: {
       Accept: "application/json",

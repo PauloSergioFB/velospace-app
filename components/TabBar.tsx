@@ -1,7 +1,13 @@
 import { Ionicons } from "@expo/vector-icons"
 import { Tabs } from "expo-router"
+import { useContext } from "react"
+
+import { AuthContext } from "@/contexts/AuthContext"
 
 const CustomButton = () => {
+  const { user } = useContext(AuthContext)
+  const isShipper = user?.type === "SHIPPER"
+
   return (
     <Tabs
       screenOptions={{
@@ -39,6 +45,7 @@ const CustomButton = () => {
         name="new-package"
         options={{
           title: "Novo Envio",
+          href: isShipper ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="rocket-outline" size={size} color={color} />
           ),
@@ -57,6 +64,13 @@ const CustomButton = () => {
 
       <Tabs.Screen
         name="package-detail"
+        options={{
+          href: null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="inspection"
         options={{
           href: null,
         }}

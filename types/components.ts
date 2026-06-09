@@ -1,11 +1,11 @@
-import { KeyboardTypeOptions } from "react-native"
+import type { KeyboardTypeOptions } from "react-native"
 
 export interface CustomTextInputProps {
   label: string
   placeholder: string
   value: string
   error?: string
-  onChangeText: (value) => void
+  onChangeText: (value: string) => void
   keyboardType?: KeyboardTypeOptions
   dataMask?: (value: string) => string
 }

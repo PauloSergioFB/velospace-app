@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://velospace-rm559914.azurewebsites.net"
+import { apiFetch } from "@/lib/api"
 
 export interface CreateOperatorInput {
   launch_provider_id: number
@@ -25,7 +25,7 @@ const extractErrorMessage = (payload: unknown) => {
 }
 
 export const createOperator = async (input: CreateOperatorInput) => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/operators`, {
+  const response = await apiFetch("/api/v1/operators", {
     method: "POST",
     headers: {
       Accept: "application/json",

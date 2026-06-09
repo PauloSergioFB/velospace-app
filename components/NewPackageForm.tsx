@@ -1,3 +1,5 @@
+import { getLaunchProviders, createSatellite } from "@/lib/api"
+import ModalSelect, { type Option } from "@/components/ui/ModalSelect"
 import {
   formatDecimal,
   validateForm,
@@ -5,14 +7,20 @@ import {
   validatePositive,
   validateRequired,
 } from "@/utils/masks"
-import { useState } from "react"
-import { Text, TouchableOpacity, View } from "react-native"
+import { useRouter } from "expo-router"
+import { useEffect, useMemo, useState } from "react"
+import { Alert, Text, TouchableOpacity, View } from "react-native"
 import CustomTextInput from "./ui/CustomTextInput"
 
 const NewPackageForm = () => {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isProviderModalVisible, setIsProviderModalVisible] = useState(false)
+  const [providerOptions, setProviderOptions] = useState<Option[]>([])
   const [data, setData] = useState({
     name: "",
-    company: "",
+    launchProviderId: "",
+    launchProviderName: "",
     height: "",
     width: "",
     length: "",
@@ -22,7 +30,7 @@ const NewPackageForm = () => {
 
   const [dataErrors, setDataErrors] = useState({
     name: "",
-    company: "",
+    launchProviderId: "",
     height: "",
     width: "",
     length: "",
@@ -30,9 +38,18 @@ const NewPackageForm = () => {
     justify: "",
   })
 
+  const selectedProvider = useMemo<Option | null>(() => {
+    if (!data.launchProviderId || !data.launchProviderName) return null
+
+    return {
+      id: data.launchProviderId,
+      label: data.launchProviderName,
+    }
+  }, [data.launchProviderId, data.launchProviderName])
+
   const validations = {
     name: [validateRequired],
-    company: [validateRequired],
+    launchProviderId: [validateRequired, validateNumber, validatePositive],
     height: [validateRequired, validateNumber, validatePositive],
     width: [validateRequired, validateNumber, validatePositive],
     length: [validateRequired, validateNumber, validatePositive],
@@ -40,16 +57,73 @@ const NewPackageForm = () => {
     justify: [validateRequired],
   }
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    const loadLaunchProviders = async () => {
+      try {
+        const response = await getLaunchProviders()
+        setProviderOptions(
+          response.items.map((item) => ({
+            id: item.launch_provider_id,
+            label: item.corporate_name,
+          })),
+        )
+      } catch {
+        setProviderOptions([])
+      }
+    }
+
+    void loadLaunchProviders()
+  }, [])
+
+  const handleSubmit = async () => {
+    if (isSubmitting) return
+
     const [validatedData, newErrors] = validateForm(data, validations)
     setDataErrors(newErrors)
 
-    if (Object.values(newErrors).some((err) => err)) {
-      console.log("Dados inválidos!", newErrors)
-      return
-    }
+    if (Object.values(newErrors).some(Boolean)) return
 
-    console.log("Dados válidos!", validatedData)
+    try {
+      setIsSubmitting(true)
+
+      await createSatellite({
+        launch_provider_id: Number(validatedData.launchProviderId),
+        name: validatedData.name,
+        height: Number(validatedData.height),
+        width: Number(validatedData.width),
+        length: Number(validatedData.length),
+        weight: Number(validatedData.weight),
+        launch_justification: validatedData.justify,
+      })
+
+      Alert.alert("Satelite cadastrado", "Seu satelite foi enviado com sucesso.", [
+        {
+          text: "OK",
+          onPress: () => {
+            setData({
+              name: "",
+              launchProviderId: "",
+              launchProviderName: "",
+              height: "",
+              width: "",
+              length: "",
+              weight: "",
+              justify: "",
+            })
+            router.back()
+          },
+        },
+      ])
+    } catch (error) {
+      Alert.alert(
+        "Erro ao cadastrar",
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel cadastrar o satelite.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -85,7 +159,7 @@ const NewPackageForm = () => {
             marginBottom: 6,
           }}
         >
-          Dados do satélite
+          Dados do satelite
         </Text>
 
         <Text
@@ -95,27 +169,47 @@ const NewPackageForm = () => {
             color: "#64748B",
           }}
         >
-          Preencha os dados técnicos para continuar com o envio.
+          Preencha os dados tecnicos para continuar com o envio.
         </Text>
       </View>
 
       <CustomTextInput
         label="Nome"
-        placeholder="Defina um nome para seu satélite"
+        placeholder="Defina um nome para seu satelite"
         value={data.name}
         error={dataErrors.name}
         onChangeText={(value) => setData((prev) => ({ ...prev, name: value }))}
       />
 
-      <CustomTextInput
-        label="Empresa"
-        placeholder="Informe o nome da empresa"
-        value={data.company}
-        error={dataErrors.company}
-        onChangeText={(value) =>
-          setData((prev) => ({ ...prev, company: value }))
-        }
-      />
+      <View style={{ gap: 6 }}>
+        <ModalSelect
+          title="Provedora de lancamento"
+          visible={isProviderModalVisible}
+          value={selectedProvider}
+          options={providerOptions}
+          openModal={() => setIsProviderModalVisible(true)}
+          closeModal={() => setIsProviderModalVisible(false)}
+          optionSelected={(option) =>
+            setData((prev) => ({
+              ...prev,
+              launchProviderId: String(option.id),
+              launchProviderName: option.label,
+            }))
+          }
+        />
+
+        {dataErrors.launchProviderId ? (
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: "500",
+              color: "#EF4444",
+            }}
+          >
+            {dataErrors.launchProviderId}
+          </Text>
+        ) : null}
+      </View>
 
       <View
         style={{
@@ -189,7 +283,7 @@ const NewPackageForm = () => {
 
       <CustomTextInput
         label="Justificativa"
-        placeholder="Por que seu satélite deve ser selecionado?"
+        placeholder="Por que seu satelite deve ser selecionado?"
         value={data.justify}
         error={dataErrors.justify}
         onChangeText={(value) =>
@@ -199,12 +293,13 @@ const NewPackageForm = () => {
 
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={handleSubmit}
+        onPress={() => void handleSubmit()}
+        disabled={isSubmitting}
         style={{
           minHeight: 56,
           marginTop: 12,
           borderRadius: 999,
-          backgroundColor: "#059669",
+          backgroundColor: isSubmitting ? "#86C5A5" : "#059669",
           alignItems: "center",
           justifyContent: "center",
           paddingHorizontal: 20,
@@ -217,7 +312,7 @@ const NewPackageForm = () => {
             color: "#FFFFFF",
           }}
         >
-          Enviar solicitação
+          {isSubmitting ? "Enviando..." : "Enviar solicitacao"}
         </Text>
       </TouchableOpacity>
     </View>

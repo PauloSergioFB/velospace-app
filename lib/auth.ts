@@ -1,11 +1,4 @@
-export type UserType = "SHIPPER" | "LAUNCHER_PROVIDER" | "PAYLOAD_HANDLER"
-
-export interface User {
-  id: number
-  name: string
-  email: string
-  type: UserType
-}
+import type { User, UserType } from "@/types"
 
 export const SIGN_IN_TYPE_LABELS: Record<UserType, string> = {
   SHIPPER: "Expedidor",

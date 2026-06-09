@@ -1,8 +1,21 @@
+import { AuthContext } from "@/contexts/AuthContext"
+import { Redirect } from "expo-router"
+import { useContext } from "react"
 import NewPackageForm from "@/components/NewPackageForm"
 import { ScrollView, Text, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 
 const NewPackage = () => {
+  const { user, loading } = useContext(AuthContext)
+
+  if (loading) {
+    return null
+  }
+
+  if (!user || user.type !== "SHIPPER") {
+    return <Redirect href="/(tabs)" />
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F8FAFC" }}>
       <ScrollView

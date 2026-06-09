@@ -4,11 +4,12 @@ import { useLocalSearchParams } from "expo-router"
 
 const PackageDetail = () => {
   const { payloadId } = useLocalSearchParams<{ payloadId: string }>()
-  const { packageDetail, notFound, handleBack } = usePackageDetail(payloadId)
+  const { packageDetail, loading, notFound, handleBack } = usePackageDetail(payloadId)
 
   return (
     <PackageDetailView
       packageDetail={packageDetail}
+      loading={loading}
       notFound={notFound}
       onBack={handleBack}
     />

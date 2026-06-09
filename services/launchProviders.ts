@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://velospace-rm559914.azurewebsites.net"
+import { apiFetch } from "@/lib/api"
 
 export interface CreateLaunchProviderInput {
   cnpj: string
@@ -26,7 +26,7 @@ const extractErrorMessage = (payload: unknown) => {
 export const createLaunchProvider = async (
   input: CreateLaunchProviderInput,
 ) => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/launch-providers`, {
+  const response = await apiFetch("/api/v1/launch-providers", {
     method: "POST",
     headers: {
       Accept: "application/json",

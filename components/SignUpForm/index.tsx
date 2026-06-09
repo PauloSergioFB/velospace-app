@@ -1,7 +1,7 @@
 import { useMultiStepForm } from "@/hooks/useMultiStepForm"
 import { createLaunchProvider } from "@/services/launchProviders"
 import { createOperator as createLaunchOperator } from "@/services/operators"
-import { createOperator as createShipper } from "@/services/shipper"
+import { createShipper } from "@/services/shippers"
 import {
   validateEmail,
   validateForm,
@@ -19,6 +19,7 @@ import SignUpType from "./steps/SignUpType"
 export interface SignUpData {
   signUpType: string
   company?: string
+  launchProviderId?: number
   name: string
   document: string
   email: string
@@ -32,9 +33,6 @@ const SIGN_UP_TYPE_LABELS: Record<string, string> = {
   LAUNCHER_PROVIDER: "Provedora de Lancamento",
   PAYLOAD_HANDLER: "Operador de Lancamento",
 }
-
-const DEFAULT_LAUNCH_PROVIDER_ID = 1
-
 const onlyDigits = (value: string) => value.replace(/\D/g, "")
 
 const getStepErrors = (currentStepIndex: number, data: SignUpData) => {
@@ -54,10 +52,15 @@ const getStepErrors = (currentStepIndex: number, data: SignUpData) => {
     case 1: {
       const [validatedData, nextErrors] = validateForm(
         {
+          company: data.company ?? "",
           name: data.name,
           document: data.document,
         },
         {
+          company:
+            data.signUpType === "PAYLOAD_HANDLER"
+              ? [(value) => validateRequired(value, "A empresa e obrigatoria")]
+              : [],
           name: [(value) => validateRequired(value, "O nome e obrigatorio")],
           document: [
             (value) => validateRequired(value, "O CPF/CNPJ e obrigatorio"),
@@ -68,6 +71,7 @@ const getStepErrors = (currentStepIndex: number, data: SignUpData) => {
       const normalizedDocument = onlyDigits(validatedData.document)
 
       return {
+        company: nextErrors.company,
         name: nextErrors.name,
         document:
           validatedData.document && !normalizedDocument
@@ -165,6 +169,10 @@ const SignUpForm = () => {
       signUpType: [
         (value) => validateRequired(value, "O tipo de cadastro e obrigatorio"),
       ],
+      company:
+        data.signUpType === "PAYLOAD_HANDLER"
+          ? [(value) => validateRequired(value, "A empresa e obrigatoria")]
+          : [],
       name: [(value) => validateRequired(value, "O nome e obrigatorio")],
       document: [
         (value) => validateRequired(value, "O CPF/CNPJ e obrigatorio"),
@@ -234,7 +242,7 @@ const SignUpForm = () => {
         })
       } else if (validatedData.signUpType === "PAYLOAD_HANDLER") {
         await createLaunchOperator({
-          launch_provider_id: DEFAULT_LAUNCH_PROVIDER_ID,
+          launch_provider_id: validatedData.launchProviderId ?? 1,
           cpf: normalizedDocument,
           name: validatedData.name,
           email: validatedData.email,
@@ -329,7 +337,33 @@ const SignUpForm = () => {
           gap: 12,
         }}
       >
-        {!isFirstStep ? (
+        {isFirstStep ? (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => router.replace("/(auth)/sign-in")}
+            style={{
+              minHeight: 56,
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 999,
+              borderWidth: 1,
+              borderColor: "#E2E8F0",
+              backgroundColor: "#FFFFFF",
+              paddingHorizontal: 16,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 15,
+                fontWeight: "600",
+                color: "#334155",
+              }}
+            >
+              Voltar ao login
+            </Text>
+          </TouchableOpacity>
+        ) : (
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => back()}
@@ -355,9 +389,9 @@ const SignUpForm = () => {
               Voltar
             </Text>
           </TouchableOpacity>
-        ) : null}
+        )}
 
-      <TouchableOpacity
+        <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => {
             if (isLastStep) {

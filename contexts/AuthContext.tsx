@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
 import { ReactNode, createContext, useEffect, useState } from "react"
 
+import { clearSession, getStoredToken, storeUser } from "@/hooks/useAuthStorage"
 import { getUser } from "@/lib/api"
 import { AuthContextType, User } from "@/types"
 
@@ -13,24 +13,18 @@ const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const token = await AsyncStorage.getItem("jwt_token")
-        const storedUser = await AsyncStorage.getItem("auth_user")
+        const token = await getStoredToken()
 
         if (token) {
-          if (storedUser) {
-            setUser(JSON.parse(storedUser) as User)
-            return
-          }
-
           const data = await getUser(token)
 
           if (!data) throw new Error()
 
           setUser(data)
+          await storeUser(data)
         }
       } catch {
-        await AsyncStorage.removeItem("auth_user")
-        await AsyncStorage.removeItem("jwt_token")
+        await clearSession()
         setUser(null)
       } finally {
         setLoading(false)
