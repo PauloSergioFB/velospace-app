@@ -297,6 +297,16 @@ const SignInForm = () => {
             Criar conta
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push("/(auth)/about")}
+          style={{ marginTop: 14 }}
+        >
+          <Text style={{ color: "#059669", fontWeight: "600" }}>
+            Sobre o App
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   )

@@ -18,7 +18,8 @@ Aplicativo mobile construído com Expo e React Native para gerenciar o ciclo de 
 - [Como Executar o Projeto](#como-executar-o-projeto)
 - [Scripts Disponíveis](#scripts-disponíveis)
 - [Regras de Negócio Relevantes](#regras-de-negócio-relevantes)
-- [Melhorias Futuras](#melhorias-futuras)
+- [Link do Vídeo](#link-do-vídeo)
+- [Integrantes](#integrantes)
 
 ## Visão Geral
 
@@ -62,6 +63,7 @@ O app atual cobre principalmente:
 - Aprovação e rejeição de operadores pela provedora de lançamento.
 - Edição de perfil por tipo de usuário.
 - Rastreamento básico do ciclo do satélite.
+- Gestão de foguetes para operadores.
 
 ## Perfis de Usuário
 
@@ -89,6 +91,7 @@ Responsabilidades:
 - Aprovar ou rejeitar satélites.
 - Definir prioridade no momento da aprovação.
 - Registrar inspeções físicas.
+- Consultar e gerenciar foguetes.
 - Editar o próprio perfil.
 
 ### 3. `LAUNCHER_PROVIDER`
@@ -110,7 +113,7 @@ Responsabilidades:
 - Login por email e senha.
 - Persistência de token em `AsyncStorage`.
 - Reconstrução do usuário autenticado a partir do JWT salvo.
-- Redirecionamento automático para a área autenticada quando houver sessão válida.
+- Reutilização do mesmo token nas integrações protegidas.
 
 ### Cadastro
 
@@ -141,12 +144,13 @@ Tipos suportados:
 - Aprovação com definição de prioridade.
 - Rejeição do satélite.
 - Acesso à tela de inspeção quando o satélite está aguardando inspeção.
+- Aba de foguetes para listar, pesquisar, cadastrar, editar e excluir foguetes.
 
 ### Home da Provedora de Lançamento
 
 Possui duas visões:
 
-- `Satelites`
+- `Satélites`
 - `Operadores`
 
 Na visão de satélites:
@@ -183,6 +187,11 @@ O app suporta edição de perfil para:
 
 Também permite atualização de senha nos perfis que possuem endpoint correspondente.
 
+### Sobre o App
+
+- Tela pública acessível a partir do login.
+- Explica a proposta, o objetivo e os benefícios do VeloSpace.
+
 ## Stack Tecnológica
 
 ### Frontend
@@ -209,7 +218,7 @@ O app segue uma estrutura simples baseada em:
 - `components/` para componentes reutilizáveis
 - `contexts/` para estado global de autenticação e perfis
 - `hooks/` para lógica de fluxo e composição de tela
-- `lib/` para client HTTP e integrações principais
+- `lib/` para clients HTTP e integrações principais
 - `services/` para serviços especializados de cadastro
 - `types/` para contratos TypeScript
 
@@ -227,12 +236,15 @@ app/
   (auth)/
     sign-in.tsx
     sign-up.tsx
+    about.tsx
   (tabs)/
     index.tsx
     new-package.tsx
     package-detail.tsx
     inspection.tsx
     profile.tsx
+    rockets.tsx
+    rocket-detail.tsx
   operator-access.tsx
 
 components/
@@ -259,6 +271,8 @@ hooks/
 lib/
   api.ts
   api-config.ts
+  rocket-api.ts
+  rocket-api-config.ts
   auth.ts
 
 services/
@@ -269,7 +283,7 @@ services/
 
 ## Integração com Backend
 
-### Base URL
+### API principal
 
 Configurada em:
 
@@ -281,12 +295,29 @@ Valor atual:
 export const API_BASE_URL = "https://velospace-rm559914.azurewebsites.net"
 ```
 
+### API de foguetes
+
+Configurada em:
+
+- [`lib/rocket-api-config.ts`](./lib/rocket-api-config.ts)
+
+Valor atual:
+
+```ts
+export const ROCKET_API_BASE_URL = "https://csharp-rm560442.azurewebsites.net"
+```
+
 ### Estratégia de integração
 
-O app utiliza um client HTTP central em [`lib/api.ts`](./lib/api.ts), responsável por:
+O app utiliza:
+
+- [`lib/api.ts`](./lib/api.ts) para a API principal
+- [`lib/rocket-api.ts`](./lib/rocket-api.ts) para a API de foguetes
+
+Responsabilidades:
 
 - Montar URLs.
-- Injetar token JWT automaticamente.
+- Injetar token JWT automaticamente quando necessário.
 - Aplicar headers padrão.
 - Fazer fallback de método em endpoints que aceitam `POST`, `PUT` ou `PATCH`.
 - Buscar automaticamente todas as páginas em endpoints paginados.
@@ -334,12 +365,22 @@ O app utiliza um client HTTP central em [`lib/api.ts`](./lib/api.ts), responsáv
 - `PUT|PATCH /api/v1/launch-providers/{id}`
 - `PUT|PATCH /api/v1/launch-providers/{id}/password`
 
+#### Foguetes
+
+- `GET /api/Rocket`
+- `GET /api/Rocket/search`
+- `GET /api/Rocket/{id}`
+- `POST /api/Rocket`
+- `PUT /api/Rocket/{id}`
+- `DELETE /api/Rocket/{id}`
+
 ## Rotas do Aplicativo
 
 ### Públicas
 
 - `/(auth)/sign-in`
 - `/(auth)/sign-up`
+- `/(auth)/about`
 
 ### Privadas
 
@@ -348,10 +389,13 @@ O app utiliza um client HTTP central em [`lib/api.ts`](./lib/api.ts), responsáv
 - `/(tabs)/package-detail`
 - `/(tabs)/inspection`
 - `/(tabs)/new-package`
+- `/(tabs)/rockets`
+- `/(tabs)/rocket-detail`
 
 ### Regras de acesso
 
 - `new-package` é restrita a `SHIPPER`.
+- `rockets` e `rocket-detail` são restritas a `PAYLOAD_HANDLER`.
 - `operator-access` é usada quando o operador existe, mas ainda não foi aprovado.
 - O layout autenticado decide redirecionamentos por papel e estado de aprovação.
 
@@ -430,7 +474,21 @@ npm run lint
 - O client do app busca todas as páginas dos endpoints paginados já integrados.
 - Isso evita ocultar registros novos quando o backend não devolve tudo na página 0.
 
+### Foguetes
 
+- O operador pode listar, pesquisar, cadastrar, editar e excluir foguetes.
+- A API de foguetes usa o mesmo token de autenticação obtido no login principal.
 
-# LINK DO VÍDEO
-https://youtu.be/mN5EYBJ3QHc 
+## Link do Vídeo
+
+https://youtu.be/mN5EYBJ3QHc
+
+## Integrantes
+
+| Nome | Função no Projeto | LinkedIn | GitHub | TURMA
+| --- | --- | --- | --- | --- |
+| Cleyton Enrike de Oliveira | Desenvolvedor .NET & IOT & DBA | LinkedIn | @Cleytonrik99 | 2TDSQ
+| Matheus Henrique Nascimento de Freitas | Desenvolvedor Mobile & DBA | LinkedIn | @MatheusHenriqueNF | 2TDSQ
+| Pedro Henrique Sena | Desenvolvedor Java & DevOps | LinkedIn | @devpedrosena1 | 2TDSQ
+| Paulo Sérgio França Barbosa | Desenvolvedor Java & DevOps & DBA | LinkedIn | @PauloSergioFIAP | 2TDSQ
+| Enzo Ribeiro Vilela de Azevedo | Quality Assurance | LinkedIn | @enzorva | 2TDSZ
